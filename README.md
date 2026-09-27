@@ -15,6 +15,19 @@ Then open **http://localhost:8080**. The Node backend serves the frontend and pr
 `POST /api/history` for Kalam plus `GET /api/health` for a health check. Use Chrome/Edge
 with internet (Three.js CDN).
 
+## 🌐 Deploy with GitHub Pages
+
+This repository includes a GitHub Actions workflow for the static frontend. To publish it:
+
+1. Open the repository's **Settings → Pages** on GitHub.
+2. Set **Source** to **GitHub Actions**.
+3. Push to `main` (or run the **Deploy to GitHub Pages** workflow manually).
+4. Open `https://sahildhillon803.github.io/IndiaGo/`.
+
+GitHub Pages does not run `server.js`. On the Pages site, Kalam automatically uses the
+bundled offline history knowledge base. Use `npm start` or a Node host such as Render when
+the `/api/history` backend endpoint is required.
+
 ## 🎮 Controls
 
 | Input | Action |

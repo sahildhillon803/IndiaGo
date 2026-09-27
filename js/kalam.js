@@ -3,7 +3,8 @@
 // ============================================================
 import { KALAM_KB } from './data.js';
 
-const LLM_ENDPOINT = window.BQ_LLM_ENDPOINT || '/api/history';
+const isGitHubPages = window.location.hostname.endsWith('.github.io');
+const LLM_ENDPOINT = window.BQ_LLM_ENDPOINT || (isGitHubPages ? '' : '/api/history');
 
 function retrieve(question) {
   const q = question.toLowerCase();

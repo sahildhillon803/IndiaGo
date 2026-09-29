@@ -37,7 +37,7 @@
         </blockquote>
 
         <ul class="feature-list">
-          <li><span class="feature-icon">🏛️</span> Archaeological 3D Artifacts · 24-Space Akshaoka Chakra</li>
+          <li><span class="feature-icon">🏛️</span> Archaeological 3D Artifacts · 24-Spoke Ashoka Chakra</li>
           <li><span class="feature-icon">✦</span> Storyline Quests: Harappa, Vedic, Empires &amp; Rivers</li>
           <li><span class="feature-icon">🏆</span> Dynamic XP, Real-Time Badges &amp; Leaderboards</li>
           <li><span class="feature-icon">🔒</span> Prototype Demonstration · Browser Local Storage Session</li>
@@ -60,14 +60,6 @@
               <div class="input-wrap">
                 <span class="input-icon">👤</span>
                 <input id="full-name" type="text" value="Arjun Sharma" aria-label="Full name">
-              </div>
-            </label>
-
-            <label class="field">
-              <span>Email Address</span>
-              <div class="input-wrap">
-                <span class="input-icon">✉️</span>
-                <input id="email" type="email" value="arjun@bharatquest.in" aria-label="Email address">
               </div>
             </label>
 
@@ -100,6 +92,14 @@
           </div>
 
           <label class="field">
+            <span>Email Address</span>
+            <div class="input-wrap">
+              <span class="input-icon">✉️</span>
+              <input id="email" type="email" value="arjun@bharatquest.in" autocomplete="email" aria-label="Email address">
+            </div>
+          </label>
+
+          <label class="field">
             <span>Password</span>
             <div class="input-wrap">
               <span class="input-icon">🔒</span>
@@ -128,6 +128,7 @@
 
   <script>
     const state = { mode: 'register' };
+    const ACCOUNT_KEY = 'bharatQuestAccountV1';
 
     const authTitle = document.getElementById('auth-title');
     const authSubtitle = document.getElementById('auth-subtitle');
@@ -165,12 +166,41 @@
       statusBox.classList.toggle('error', isError);
     }
 
+    function getAccount() {
+      try {
+        const raw = localStorage.getItem(ACCOUNT_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        console.error('Unable to read the local account.', error);
+        return null;
+      }
+    }
+
+    function enterGame(message) {
+      const authShell = document.querySelector('.auth-shell');
+      if (authShell) authShell.style.display = 'none';
+
+      if (!window.BQ || typeof window.BQ.startLevel !== 'function' || !window.BQ.renderer) {
+        setStatus('The game is still loading. Please try again in a moment.', true);
+        if (authShell) authShell.style.display = '';
+        return;
+      }
+
+      setStatus(message);
+      window.BQ.startLevel(1);
+    }
+
     function handleSubmit() {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
       if (!email || !password) {
         setStatus('Please enter your email and password.', true);
+        return;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setStatus('Please enter a valid email address.', true);
         return;
       }
 
@@ -192,25 +222,30 @@
           setStatus('Passwords do not match.', true);
           return;
         }
+
+        if (getAccount()) {
+          setStatus('An account already exists. Please use LOGIN.', true);
+          setMode('login');
+          return;
+        }
+
+        const selectedAvatar = document.querySelector('.avatar.active');
+        localStorage.setItem(ACCOUNT_KEY, JSON.stringify({
+          name,
+          email: email.toLowerCase(),
+          password,
+          avatar: selectedAvatar ? selectedAvatar.dataset.avatar : '🧑'
+        }));
+        enterGame(`Welcome to BharatQuest, ${name}!`);
+        return;
       }
 
-      const authShell = document.querySelector('.auth-shell');
-      if (authShell) {
-        authShell.style.display = 'none';
+      const account = getAccount();
+      if (!account || account.email !== email.toLowerCase() || account.password !== password) {
+        setStatus('Email or password is incorrect. Register first if you are new here.', true);
+        return;
       }
-      setStatus('Login successful. Welcome back!');
-
-      if (window.BQ && typeof window.BQ.startLevel === 'function') {
-        window.BQ.startLevel(1);
-      } else {
-        const screens = ['screen-menu', 'screen-levels', 'screen-museum', 'screen-achv', 'screen-settings', 'screen-game'];
-        screens.forEach((screenId) => {
-          const screen = document.getElementById(screenId);
-          if (screen) {
-            screen.classList.toggle('hidden', screenId !== 'screen-game');
-          }
-        });
-      }
+      enterGame(`Welcome back, ${account.name}!`);
     }
 
     tabLogin.addEventListener('click', () => setMode('login'));

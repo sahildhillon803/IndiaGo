@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>IndiaGo — Guardians of Time</title>
+<title>BharatQuest — Guardians of Time</title>
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <script type="importmap">
@@ -13,198 +13,398 @@
 </script>
 </head>
 <body>
-<div id="fatal" class="hidden fatal"><h2>⚠️ Could not start 3D</h2><p id="fatal-msg"></p><p>Use a Chromium/Edge/Chrome browser. For local development, run <code>npm start</code>.</p></div>
-<div id="fade" class="hidden"></div>
-<div id="fx-layer"></div>
+  <div class="auth-shell">
+    <main class="auth-layout">
+      <section class="brand-panel">
+        <div class="status-pill">
+          <span class="status-icon">🏛️</span>
+          <span>BharatQuest · Guardians of Time</span>
+        </div>
 
-<!-- 3D canvas -->
-<div id="screen-game" class="hidden">
-  <div id="game-canvas"></div>
+        <div class="brand-mark" aria-label="BharatQuest logo">
+          <span class="ring ring-1"></span>
+          <span class="ring ring-2"></span>
+          <span class="ring ring-3"></span>
+          <span class="center-dot"></span>
+        </div>
 
-  <!-- HUD -->
-  <div id="hud" class="hidden">
-    <div id="hud-top">
-      <div class="hud-pill" id="hud-status">🧭 Explorer</div>
-      <div class="hud-mid">
-        <div id="hud-mission">Mission</div>
-        <div id="hud-progress">Progress</div>
+        <h1 class="brand-title">BHARAT<span>QUEST</span></h1>
+        <p class="brand-subtitle">LEARN INDIA. PLAY THE QUEST.</p>
+
+        <blockquote class="brand-quote">
+          “Explore history, culture and civilization through interactive quests.
+          Discover. Solve. Learn. Unlock.”
+        </blockquote>
+
+        <ul class="feature-list">
+          <li><span class="feature-icon">🏛️</span> Archaeological 3D Artifacts · 24-Space Akshaoka Chakra</li>
+          <li><span class="feature-icon">✦</span> Storyline Quests: Harappa, Vedic, Empires &amp; Rivers</li>
+          <li><span class="feature-icon">🏆</span> Dynamic XP, Real-Time Badges &amp; Leaderboards</li>
+          <li><span class="feature-icon">🔒</span> Prototype Demonstration · Browser Local Storage Session</li>
+        </ul>
+      </section>
+
+      <aside class="form-panel">
+        <div class="auth-card">
+          <div class="auth-tabs">
+            <button id="tab-login" class="tab-btn" type="button">LOGIN</button>
+            <button id="tab-register" class="tab-btn active" type="button">REGISTER</button>
+          </div>
+
+          <h2 id="auth-title">BEGIN YOUR JOURNEY</h2>
+          <p id="auth-subtitle">Create your explorer profile and start your journey.</p>
+
+          <div id="register-fields">
+            <label class="field">
+              <span>Full Name</span>
+              <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input id="full-name" type="text" value="Arjun Sharma" aria-label="Full name">
+              </div>
+            </label>
+
+            <label class="field">
+              <span>Email Address</span>
+              <div class="input-wrap">
+                <span class="input-icon">✉️</span>
+                <input id="email" type="email" value="arjun@bharatquest.in" aria-label="Email address">
+              </div>
+            </label>
+
+            <div class="split-fields">
+              <label class="field compact">
+                <span>Class / Academic Year</span>
+                <div class="input-wrap select-wrap">
+                  <select id="class-year" aria-label="Class or academic year">
+                    <option selected>Class / Academic Year</option>
+                    <option>8th Grade</option>
+                    <option>9th Grade</option>
+                    <option>10th Grade</option>
+                    <option>11th Grade</option>
+                    <option>12th Grade</option>
+                    <option>College</option>
+                  </select>
+                </div>
+              </label>
+
+              <label class="field compact">
+                <span>Choose Avatar</span>
+                <div class="avatar-strip" aria-label="Choose avatar">
+                  <button class="avatar active" type="button" data-avatar="🧑" aria-label="Avatar 1">🧑</button>
+                  <button class="avatar" type="button" data-avatar="👩" aria-label="Avatar 2">👩</button>
+                  <button class="avatar" type="button" data-avatar="🦊" aria-label="Avatar 3">🦊</button>
+                  <button class="avatar" type="button" data-avatar="🦉" aria-label="Avatar 4">🦉</button>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>Password</span>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input id="password" type="password" placeholder="Minimum 6 characters">
+              <span class="input-state">◉</span>
+            </div>
+          </label>
+
+          <label id="confirm-password-wrap" class="field">
+            <span>Confirm Password</span>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input id="confirm-password" type="password" placeholder="Re-enter your password">
+              <span class="input-state">◉</span>
+            </div>
+          </label>
+
+          <button id="submit-btn" class="submit-btn" type="button">CREATE ACCOUNT <span>→</span></button>
+          <div id="auth-status" class="auth-status" aria-live="polite"></div>
+
+          <p class="login-link">Already have an account? <a id="toggle-auth-link" href="#">LOGIN</a></p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const state = { mode: 'register' };
+
+    const authTitle = document.getElementById('auth-title');
+    const authSubtitle = document.getElementById('auth-subtitle');
+    const registerFields = document.getElementById('register-fields');
+    const confirmWrap = document.getElementById('confirm-password-wrap');
+    const submitBtn = document.getElementById('submit-btn');
+    const toggleLink = document.getElementById('toggle-auth-link');
+    const statusBox = document.getElementById('auth-status');
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+
+    function setMode(mode) {
+      state.mode = mode;
+      const isRegister = mode === 'register';
+
+      tabLogin.classList.toggle('active', !isRegister);
+      tabRegister.classList.toggle('active', isRegister);
+
+      registerFields.style.display = isRegister ? 'block' : 'none';
+      confirmWrap.style.display = isRegister ? 'block' : 'none';
+
+      authTitle.textContent = isRegister ? 'BEGIN YOUR JOURNEY' : 'WELCOME BACK';
+      authSubtitle.textContent = isRegister
+        ? 'Create your explorer profile and start your journey.'
+        : 'Log in to continue your adventure.';
+
+      submitBtn.innerHTML = isRegister ? 'CREATE ACCOUNT <span>→</span>' : 'LOGIN <span>→</span>';
+      toggleLink.textContent = isRegister ? 'LOGIN' : 'REGISTER';
+      toggleLink.parentElement.firstChild.textContent = isRegister ? 'Already have an account? ' : 'New to BharatQuest? ';
+      statusBox.textContent = '';
+    }
+
+    function setStatus(message, isError = false) {
+      statusBox.textContent = message;
+      statusBox.classList.toggle('error', isError);
+    }
+
+    function handleSubmit() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        setStatus('Please enter your email and password.', true);
+        return;
+      }
+
+      if (state.mode === 'register') {
+        const name = document.getElementById('full-name').value.trim();
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (!name) {
+          setStatus('Please enter your full name.', true);
+          return;
+        }
+
+        if (password.length < 6) {
+          setStatus('Password must be at least 6 characters long.', true);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          setStatus('Passwords do not match.', true);
+          return;
+        }
+      }
+
+      const authShell = document.querySelector('.auth-shell');
+      if (authShell) {
+        authShell.style.display = 'none';
+      }
+      setStatus('Login successful. Welcome back!');
+
+      if (window.BQ && typeof window.BQ.startLevel === 'function') {
+        window.BQ.startLevel(1);
+      } else {
+        const screens = ['screen-menu', 'screen-levels', 'screen-museum', 'screen-achv', 'screen-settings', 'screen-game'];
+        screens.forEach((screenId) => {
+          const screen = document.getElementById(screenId);
+          if (screen) {
+            screen.classList.toggle('hidden', screenId !== 'screen-game');
+          }
+        });
+      }
+    }
+
+    tabLogin.addEventListener('click', () => setMode('login'));
+    tabRegister.addEventListener('click', () => setMode('register'));
+    toggleLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      setMode(state.mode === 'register' ? 'login' : 'register');
+    });
+    submitBtn.addEventListener('click', handleSubmit);
+
+    document.querySelectorAll('.avatar').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.avatar').forEach((b) => b.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+
+    setMode('register');
+  </script>
+
+  <div id="fatal" class="hidden fatal"><h2>⚠️ Could not start 3D</h2><p id="fatal-msg"></p><p>Use a Chromium/Edge/Chrome browser. For local development, run <code>npm start</code>.</p></div>
+  <div id="fade" class="hidden"></div>
+  <div id="fx-layer"></div>
+
+  <div id="screen-game" class="hidden">
+    <div id="game-canvas"></div>
+    <div id="hud" class="hidden">
+      <div id="hud-top">
+        <div class="hud-pill" id="hud-status">🧭 Explorer</div>
+        <div class="hud-mid">
+          <div id="hud-mission">Mission</div>
+          <div id="hud-progress">Progress</div>
+        </div>
+        <div class="hud-right">
+          <span class="hud-pill" id="hud-points">⭐ 0</span>
+          <span class="hud-pill" id="hud-art">🏺 0</span>
+          <span class="hud-pill" id="hud-seals">🔱 0/5</span>
+          <button class="icon-btn" id="btn-inv-hud" title="Inventory (I)">🎒</button>
+          <button class="icon-btn" id="btn-kalam-hud" title="Ask Kalam">🤖</button>
+          <button class="icon-btn" id="btn-pause" title="Pause (Esc)">⏸️</button>
+        </div>
       </div>
-      <div class="hud-right">
-        <span class="hud-pill" id="hud-points">⭐ 0</span>
-        <span class="hud-pill" id="hud-art">🏺 0</span>
-        <span class="hud-pill" id="hud-seals">🔱 0/5</span>
-        <button class="icon-btn" id="btn-inv-hud" title="Inventory (I)">🎒</button>
-        <button class="icon-btn" id="btn-kalam-hud" title="Ask Kalam">🤖</button>
-        <button class="icon-btn" id="btn-pause" title="Pause (Esc)">⏸️</button>
+      <div id="hud-controls-hint">WASD move · Mouse-drag camera · <b>E</b> interact · <b>Space</b> jump · <b>I</b> bag · <b>Esc</b> pause</div>
+      <div id="interact-prompt" class="hidden"></div>
+    </div>
+
+    <div id="mobile-ui">
+      <div id="joystick"><div id="joy-knob"></div></div>
+      <div id="mobile-btns">
+        <button id="btn-act" class="mbtn act">E</button>
+        <button id="btn-jump" class="mbtn">⤒</button>
+        <button id="btn-kalam-m" class="mbtn">🤖</button>
+        <button id="btn-inv" class="mbtn">🎒</button>
       </div>
     </div>
-    <div id="hud-controls-hint">WASD move · Mouse-drag camera · <b>E</b> interact · <b>Space</b> jump · <b>I</b> bag · <b>Esc</b> pause</div>
-    <div id="interact-prompt" class="hidden"></div>
-  </div>
 
-  <!-- Mobile controls -->
-  <div id="mobile-ui">
-    <div id="joystick"><div id="joy-knob"></div></div>
-    <div id="mobile-btns">
-      <button id="btn-act" class="mbtn act">E</button>
-      <button id="btn-jump" class="mbtn">⤒</button>
-      <button id="btn-kalam-m" class="mbtn">🤖</button>
-      <button id="btn-inv" class="mbtn">🎒</button>
+    <div id="dialogue" class="hidden">
+      <div id="dlg-name">NPC</div>
+      <div id="dlg-text"></div>
+      <button class="btn primary" id="dlg-next">Continue →</button>
+    </div>
+
+    <div id="quiz-modal" class="modal hidden">
+      <div class="panel">
+        <div class="panel-head"><span id="quiz-title">Quiz</span><button class="icon-btn" id="quiz-close">✕</button></div>
+        <div id="quiz-body"></div>
+      </div>
+    </div>
+
+    <div id="puzzle-modal" class="modal hidden">
+      <div class="panel">
+        <div class="panel-head"><span id="puzzle-title">Puzzle</span><button class="icon-btn" id="puzzle-close">✕</button></div>
+        <div id="puzzle-body"></div>
+      </div>
+    </div>
+
+    <div id="inventory-panel" class="modal hidden">
+      <div class="panel small">
+        <div class="panel-head"><span>🎒 Inventory</span><button class="icon-btn" id="inv-close">✕</button></div>
+        <div id="inv-body"></div>
+      </div>
+    </div>
+
+    <div id="kalam-panel" class="hidden">
+      <div class="panel-head"><span>🤖 KALAM · History Guide</span><button class="icon-btn" id="kalam-close">✕</button></div>
+      <div id="kalam-log"><div class="kalam-msg kalam">🤖 Kalam: Namaste! Ask me anything about history!</div></div>
+      <div class="kalam-chips">
+        <button class="kalam-chip">Why were drainage systems important?</button>
+        <button class="kalam-chip">Why is Nalanda important?</button>
+        <button class="kalam-chip">Tell me something interesting</button>
+      </div>
+      <div class="kalam-row"><input id="kalam-input" placeholder="Ask Kalam…" maxlength="200"><button class="btn primary" id="kalam-ask">Ask</button></div>
+    </div>
+
+    <div id="pause-menu" class="modal hidden">
+      <div class="panel small center">
+        <h2>⏸️ Paused</h2>
+        <button class="btn primary big" id="btn-continue">▶ Continue</button>
+        <button class="btn" id="btn-pause-kalam">🤖 Ask Kalam</button>
+        <button class="btn" id="btn-quit-map">🗺️ Chrono Map</button>
+      </div>
+    </div>
+
+    <div id="results-modal" class="modal hidden">
+      <div class="panel small center results">
+        <h2 id="results-title">LEVEL COMPLETE!</h2>
+        <div id="results-seal" class="big-seal">🏺 Seal</div>
+        <div id="results-stars" class="stars">⭐⭐⭐</div>
+        <p id="results-detail"></p>
+        <button class="btn primary big" id="results-next">Next →</button>
+        <button class="btn ghost" id="results-map">🗺️ Chrono Map</button>
+      </div>
+    </div>
+
+    <div id="victory-modal" class="modal hidden">
+      <div class="panel center results">
+        <h2>🎉 INDIGO COMPLETE!</h2>
+        <div class="big-seal">🔱🔱🔱🔱🔱</div>
+        <p class="oath">“YOU HAVE BECOME A GUARDIAN OF TIME.”</p>
+        <p id="victory-stats"></p>
+        <button class="btn primary big" id="victory-map">🗺️ Explore the Chrono Map</button>
+      </div>
+    </div>
+
+    <div id="toast" class="hidden"></div>
+    <div id="ach-pop" class="hidden"></div>
+    <div id="discover-card" class="hidden">
+      <div id="disc-icon">📍</div>
+      <div class="disc-body">
+        <div id="disc-kicker">✨ PLACE DISCOVERED · +5</div>
+        <div id="disc-title">The Great Bath</div>
+        <div id="disc-fact"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Dialogue -->
-  <div id="dialogue" class="hidden">
-    <div id="dlg-name">NPC</div>
-    <div id="dlg-text"></div>
-    <button class="btn primary" id="dlg-next">Continue →</button>
-  </div>
-
-  <!-- Quiz -->
-  <div id="quiz-modal" class="modal hidden">
-    <div class="panel">
-      <div class="panel-head"><span id="quiz-title">Quiz</span><button class="icon-btn" id="quiz-close">✕</button></div>
-      <div id="quiz-body"></div>
+  <div id="screen-menu" class="screen hidden">
+    <div class="menu-bg"></div>
+    <div class="menu-card">
+      <div class="flag">🇮🇳</div>
+      <h1 class="title">BHARATQUEST</h1>
+      <div class="subtitle">✨ GUARDIANS OF TIME ✨</div>
+      <p class="tagline">Recover the five Time Seals. Travel Indian history. Become a Guardian of Time.</p>
+      <div class="menu-buttons">
+        <button class="btn primary big" id="btn-play">▶ PLAY</button>
+        <button class="btn" id="btn-resume">⏵ Continue Adventure</button>
+        <button class="btn" id="btn-levels">🗺️ LEVEL SELECT</button>
+        <button class="btn" id="btn-museum">🏺 HISTORY MUSEUM</button>
+        <button class="btn" id="btn-achv">🏆 ACHIEVEMENTS</button>
+        <button class="btn" id="btn-settings">⚙ SETTINGS</button>
+        <button class="btn demo" id="btn-demo">🎬 DEMO MODE (quick Level 1)</button>
+      </div>
+      <div id="menu-seals" class="menu-seals"></div>
+      <div class="menu-foot">WASD + Mouse · E interact · Space jump · Ages 9–15 · Progress auto-saves</div>
     </div>
   </div>
 
-  <!-- Puzzle -->
-  <div id="puzzle-modal" class="modal hidden">
-    <div class="panel">
-      <div class="panel-head"><span id="puzzle-title">Puzzle</span><button class="icon-btn" id="puzzle-close">✕</button></div>
-      <div id="puzzle-body"></div>
+  <div id="screen-levels" class="screen hidden">
+    <div class="page">
+      <h2>🗺️ THE CHRONO MAP</h2>
+      <p class="tagline">Five portals. Five eras. Recover every Time Seal.</p>
+      <div id="level-cards"></div>
+      <button class="btn ghost" data-back>← Main Menu</button>
     </div>
   </div>
 
-  <!-- Inventory -->
-  <div id="inventory-panel" class="modal hidden">
-    <div class="panel small">
-      <div class="panel-head"><span>🎒 Inventory</span><button class="icon-btn" id="inv-close">✕</button></div>
-      <div id="inv-body"></div>
+  <div id="screen-museum" class="screen hidden">
+    <div class="page wide">
+      <h2>🏺 HISTORY MUSEUM</h2>
+      <p class="tagline" id="museum-count"></p>
+      <div id="museum-grid"></div>
+      <button class="btn ghost" data-back>← Main Menu</button>
     </div>
   </div>
 
-  <!-- Kalam -->
-  <div id="kalam-panel" class="hidden">
-    <div class="panel-head"><span>🤖 KALAM · History Guide</span><button class="icon-btn" id="kalam-close">✕</button></div>
-    <div id="kalam-log"><div class="kalam-msg kalam">🤖 Kalam: Namaste! Ask me anything about history!</div></div>
-    <div class="kalam-chips">
-      <button class="kalam-chip">Why were drainage systems important?</button>
-      <button class="kalam-chip">Why is Nalanda important?</button>
-      <button class="kalam-chip">Tell me something interesting</button>
-    </div>
-    <div class="kalam-row"><input id="kalam-input" placeholder="Ask Kalam…" maxlength="200"><button class="btn primary" id="kalam-ask">Ask</button></div>
-  </div>
-
-  <!-- Pause -->
-  <div id="pause-menu" class="modal hidden">
-    <div class="panel small center">
-      <h2>⏸️ Paused</h2>
-      <button class="btn primary big" id="btn-continue">▶ Continue</button>
-      <button class="btn" id="btn-pause-kalam">🤖 Ask Kalam</button>
-      <button class="btn" id="btn-quit-map">🗺️ Chrono Map</button>
+  <div id="screen-achv" class="screen hidden">
+    <div class="page">
+      <h2>🏆 ACHIEVEMENTS</h2>
+      <div id="achv-list"></div>
+      <button class="btn ghost" data-back>← Main Menu</button>
     </div>
   </div>
 
-  <!-- Results -->
-  <div id="results-modal" class="modal hidden">
-    <div class="panel small center results">
-      <h2 id="results-title">LEVEL COMPLETE!</h2>
-      <div id="results-seal" class="big-seal">🏺 Seal</div>
-      <div id="results-stars" class="stars">⭐⭐⭐</div>
-      <p id="results-detail"></p>
-      <button class="btn primary big" id="results-next">Next →</button>
-      <button class="btn ghost" id="results-map">🗺️ Chrono Map</button>
+  <div id="screen-settings" class="screen hidden">
+    <div class="page">
+      <h2>⚙ SETTINGS</h2>
+      <label class="set-row"><input type="checkbox" id="set-music" checked> 🎵 Background music</label>
+      <label class="set-row"><input type="checkbox" id="set-sfx" checked> 🔊 Sound effects</label>
+      <label class="set-row">✨ Graphics <select id="set-quality"><option value="high">High</option><option value="low">Low (faster)</option></select></label>
+      <button class="btn danger" id="btn-reset">🗑️ Reset all progress</button>
+      <br><button class="btn ghost" data-back>← Main Menu</button>
     </div>
   </div>
 
-  <!-- Victory -->
-  <div id="victory-modal" class="modal hidden">
-    <div class="panel center results">
-      <h2>🎉 INDIGO COMPLETE!</h2>
-      <div class="big-seal">🔱🔱🔱🔱🔱</div>
-      <p class="oath">“YOU HAVE BECOME A GUARDIAN OF TIME.”</p>
-      <p id="victory-stats"></p>
-      <button class="btn primary big" id="victory-map">🗺️ Explore the Chrono Map</button>
-    </div>
-  </div>
-
-  <div id="toast" class="hidden"></div>
-  <div id="ach-pop" class="hidden"></div>
-  <!-- Location discovery card -->
-  <div id="discover-card" class="hidden">
-    <div id="disc-icon">📍</div>
-    <div class="disc-body">
-      <div id="disc-kicker">✨ PLACE DISCOVERED · +5</div>
-      <div id="disc-title">The Great Bath</div>
-      <div id="disc-fact"></div>
-    </div>
-  </div>
-</div>
-
-<!-- MAIN MENU -->
-<div id="screen-menu" class="screen">
-  <div class="menu-bg"></div>
-  <div class="menu-card">
-    <div class="flag">🇮🇳</div>
-    <h1 class="title">INDIAGO</h1>
-    <div class="subtitle">✨ GUARDIANS OF TIME ✨</div>
-    <p class="tagline">Recover the five Time Seals. Travel Indian history. Become a Guardian of Time.</p>
-    <div class="menu-buttons">
-      <button class="btn primary big" id="btn-play">▶ PLAY</button>
-      <button class="btn" id="btn-resume">⏵ Continue Adventure</button>
-      <button class="btn" id="btn-levels">🗺️ LEVEL SELECT</button>
-      <button class="btn" id="btn-museum">🏺 HISTORY MUSEUM</button>
-      <button class="btn" id="btn-achv">🏆 ACHIEVEMENTS</button>
-      <button class="btn" id="btn-settings">⚙ SETTINGS</button>
-      <button class="btn demo" id="btn-demo">🎬 DEMO MODE (quick Level 1)</button>
-    </div>
-    <div id="menu-seals" class="menu-seals"></div>
-    <div class="menu-foot">WASD + Mouse · E interact · Space jump · Ages 9–15 · Progress auto-saves</div>
-  </div>
-</div>
-
-<!-- LEVEL SELECT -->
-<div id="screen-levels" class="screen hidden">
-  <div class="page">
-    <h2>🗺️ THE CHRONO MAP</h2>
-    <p class="tagline">Five portals. Five eras. Recover every Time Seal.</p>
-    <div id="level-cards"></div>
-    <button class="btn ghost" data-back>← Main Menu</button>
-  </div>
-</div>
-
-<!-- MUSEUM -->
-<div id="screen-museum" class="screen hidden">
-  <div class="page wide">
-    <h2>🏺 HISTORY MUSEUM</h2>
-    <p class="tagline" id="museum-count"></p>
-    <div id="museum-grid"></div>
-    <button class="btn ghost" data-back>← Main Menu</button>
-  </div>
-</div>
-
-<!-- ACHIEVEMENTS -->
-<div id="screen-achv" class="screen hidden">
-  <div class="page">
-    <h2>🏆 ACHIEVEMENTS</h2>
-    <div id="achv-list"></div>
-    <button class="btn ghost" data-back>← Main Menu</button>
-  </div>
-</div>
-
-<!-- SETTINGS -->
-<div id="screen-settings" class="screen hidden">
-  <div class="page">
-    <h2>⚙ SETTINGS</h2>
-    <label class="set-row"><input type="checkbox" id="set-music" checked> 🎵 Background music</label>
-    <label class="set-row"><input type="checkbox" id="set-sfx" checked> 🔊 Sound effects</label>
-    <label class="set-row">✨ Graphics <select id="set-quality"><option value="high">High</option><option value="low">Low (faster)</option></select></label>
-    <button class="btn danger" id="btn-reset">🗑️ Reset all progress</button>
-    <br><button class="btn ghost" data-back>← Main Menu</button>
-  </div>
-</div>
-
-<script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
-  "name": "indiago-guardians-of-time",
+  "name": "bharatquest-guardians-of-time",
   "version": "1.0.0",
-  "description": "IndiaGo — Guardians of Time: a 3D educational adventure through Indian history (Three.js, zero build step).",
+  "description": "BharatQuest — Guardians of Time: a 3D educational adventure through Indian history (Three.js, zero build step).",
   "type": "module",
   "scripts": {
     "dev": "node --watch server.js",

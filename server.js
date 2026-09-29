@@ -104,7 +104,7 @@ function startServer(p, retries = 10) {
   });
 
   server.listen(p, () => {
-    console.log(`IndiaGo running at http://localhost:${p}`);
+    console.log(`BharatQuest running at http://localhost:${p}`);
   });
 }
 

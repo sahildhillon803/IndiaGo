@@ -1,4 +1,4 @@
-# 🇮🇳 INDIAGO — Guardians of Time
+# 🇮🇳 BHARATQUEST — Guardians of Time
 
 A playable 3D educational adventure through Indian history, built for a hackathon demo (ages 9–15).
 Zero build step — pure **Three.js (CDN) + vanilla JS modules**.
@@ -22,7 +22,7 @@ This repository includes a GitHub Actions workflow for the static frontend. To p
 1. Open the repository's **Settings → Pages** on GitHub.
 2. Set **Source** to **GitHub Actions**.
 3. Push to `main` (or run the **Deploy to GitHub Pages** workflow manually).
-4. Open `https://sahildhillon803.github.io/IndiaGo/`.
+4. Open `https://sahildhillon803.github.io/BharatQuest/`.
 
 GitHub Pages does not run `server.js`. On the Pages site, Kalam automatically uses the
 bundled offline history knowledge base. Use `npm start` or a Node host such as Render when

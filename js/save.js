@@ -1,5 +1,5 @@
 // Persistent progression — localStorage. Never loses progress on refresh.
-const KEY = 'indiaGoSaveV1';
+const KEY = 'bharatQuestSaveV1';
 
 const DEFAULTS = () => ({
   currentLevel: 1,

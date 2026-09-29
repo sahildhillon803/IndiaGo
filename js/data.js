@@ -1,5 +1,5 @@
 // ============================================================
-// INDIAGO — data-driven historical content
+// BHARATQUEST — data-driven historical content
 // All questions / NPCs / artifacts / levels live here so new
 // eras can be added without touching game logic.
 // ============================================================

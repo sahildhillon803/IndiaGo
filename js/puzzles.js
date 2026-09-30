@@ -13,10 +13,54 @@ function close() { document.getElementById('puzzle-modal').classList.add('hidden
 
 export function openPuzzle(levelId, { onSolve }) {
   if (levelId === 1) return drainage(onSolve);
-  if (levelId === 2) return library(onSolve);
+  if (levelId === 2) return nalandaNetwork(onSolve);
   if (levelId === 3) return temple(onSolve);
   if (levelId === 4) return fort(onSolve);
   return press(onSolve);
+}
+
+// L2: classify evidence, then build two historically grounded knowledge paths.
+function nalandaNetwork(onSolve) {
+  const cards = [
+    ['philosophy', '🪷', 'A dialogue about ethics and the good life'],
+    ['medicine', '🌿', 'A treatment note comparing symptoms and remedies'],
+    ['astronomy', '🌟', 'A record of repeated observations of the night sky'],
+    ['mathematics', '📐', 'A calculation for measuring distance and proportion'],
+    ['language', '🔤', 'A grammar exercise comparing words across texts'],
+    ['logic', '⚖️', 'An argument whose claims must follow from its evidence']
+  ];
+  shell('🧠 Knowledge Network · Scholar’s Challenge', `
+    <p class="p-sub"><b>Fictional archive disruption:</b> match each manuscript clue to a discipline, then build connections that explain how knowledge moves.</p>
+    <div class="quiz-opts">${cards.map(([id, icon, clue]) => `<div class="tile discipline" data-id="${id}">${icon} <b>${clue}</b><small>Choose the discipline that best fits this evidence.</small><select class="discipline-choice" aria-label="Discipline for ${id}"><option value="">Choose…</option>${cards.map(([value]) => `<option value="${value}">${value[0].toUpperCase() + value.slice(1)}</option>`).join('')}</select></div>`).join('')}</div>
+    <p class="p-hint" id="network-hint">Match all six manuscript clues before building the knowledge network.</p>
+    <div id="network-links" class="tile-row hidden">
+      <button class="tile link" data-link="astronomy-observation-mathematics">🌟 Astronomy → observation → 📐 mathematical calculation</button>
+      <button class="tile link" data-link="medicine-observation-treatment">🌿 Medicine → observation → treatment knowledge</button>
+      <button class="tile link" data-link="language-logic">🔤 Language → ⚖️ Logic (clear arguments)</button>
+    </div>`);
+  const chosen = new Set();
+  document.querySelectorAll('.discipline-choice').forEach(select => select.addEventListener('change', e => {
+    const card = e.target.closest('.discipline');
+    if (e.target.value !== card.dataset.id) {
+      e.target.value = '';
+      AudioSys.fail();
+      document.getElementById('network-hint').textContent = 'That clue does not fit the selected discipline. Look at what the manuscript describes.';
+      return;
+    }
+    chosen.add(card.dataset.id); card.classList.add('ok'); e.target.disabled = true;
+    if (chosen.size === cards.length) {
+      document.getElementById('network-hint').textContent = 'Now build two connections supported by the evidence cards.';
+      document.getElementById('network-links').classList.remove('hidden');
+    }
+  }));
+  const links = new Set();
+  document.querySelectorAll('.link').forEach(b => b.addEventListener('click', () => {
+    links.add(b.dataset.link); b.classList.add('ok'); b.disabled = true;
+    if (links.has('astronomy-observation-mathematics') && links.has('medicine-observation-treatment')) {
+      document.getElementById('network-hint').textContent = '✅ Connections reconstructed: observation is a method shared by sky study and medicine.';
+      AudioSys.seal(); setTimeout(() => { close(); onSolve(); }, 950);
+    }
+  }));
 }
 
 // ---- L1: rotate 3 pipes so water flows (click to rotate; all must be "═" connected) ----
@@ -42,7 +86,37 @@ function drainage(onSolve) {
     if (n === 3) {
       AudioSys.seal();
       document.getElementById('pipe-hint').innerHTML = '✨ Water flows! The Time Seal shimmers into view…';
-      setTimeout(() => { close(); onSolve(); }, 900);
+      setTimeout(() => allocation(onSolve), 700);
+    }
+
+    function allocation(onSolve) {
+      let water = 10;
+      shell('💧 Water Allocation Challenge', `
+        <p class="p-sub">A simplified gameplay simulation: allocate <b>10 jars</b> between a household, craft workshop and public/community use. Archaeology can suggest relationships, but this is not a claimed historical event.</p>
+        <div class="tile-row allocation-row">
+          <button class="tile alloc" data-i="0">🏠 Household <b>0</b></button>
+          <button class="tile alloc" data-i="1">🧵 Craft <b>0</b></button>
+          <button class="tile alloc" data-i="2">🤝 Public <b>0</b></button>
+        </div>
+        <p class="p-hint" id="alloc-hint">Use each jar thoughtfully. ${water} jars remain.</p>
+        <button class="btn primary" id="alloc-solve" disabled>Confirm balanced allocation</button>`);
+      const values = [0, 0, 0];
+      const btns = [...document.querySelectorAll('.alloc')];
+      btns.forEach(b => b.addEventListener('click', () => {
+        if (water <= 0) return;
+        const i = +b.dataset.i; values[i]++; water--; b.querySelector('b').textContent = values[i];
+        document.getElementById('alloc-hint').textContent = `${water} jars remain. Aim for community access without starving homes or craft.`;
+        document.getElementById('alloc-solve').disabled = water !== 0;
+      }));
+      document.getElementById('alloc-solve').addEventListener('click', () => {
+        if (Math.min(...values) < 2 || values[2] < 3) {
+          document.getElementById('alloc-hint').textContent = 'Try again: each use needs water, and public/community use must remain visible.';
+          return;
+        }
+        document.getElementById('alloc-hint').textContent = '✅ Route reconstructed. Historical explanation: planned drains and outlets show how water could be managed beyond one household; this simulation helps test that interpretation, not claim a documented event.';
+        AudioSys.seal();
+        setTimeout(() => { close(); onSolve(); }, 900);
+      });
     }
   }
   btns.forEach(b => b.addEventListener('click', () => {

@@ -19,7 +19,7 @@ export function achievementPopup(def) {
 }
 
 export function showScreen(id) {
-  ['screen-menu', 'screen-levels', 'screen-museum', 'screen-achv', 'screen-settings', 'screen-game'].forEach(s => {
+  ['screen-menu', 'screen-levels', 'screen-museum', 'screen-achv', 'screen-codex', 'screen-settings', 'screen-game'].forEach(s => {
     document.getElementById(s).classList.toggle('hidden', s !== id);
   });
   document.getElementById('hud').classList.toggle('hidden', id !== 'screen-game');

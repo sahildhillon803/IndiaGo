@@ -255,12 +255,12 @@ export function buildWorld(THREE, scene, level) {
   }
   // Floating name-sign over a landmark + discovery zone registration.
   // No collider added — signs never block movement or collectibles.
-  function addLandmark({ x, z, r = 4, icon = '📍', title, fact = '', signY = 4.6 }) {
+  function addLandmark({ x, z, r = 4, icon = '📍', title, fact = '', signY = 4.6, evidenceId = null, flow = null }) {
     const label = labelSprite(`${icon} ${title}`);
     label.position.set(x, signY, z);
     scene.add(label);
     H.dynamics.push((dt, t) => { label.position.y = signY + Math.sin(t * 1.5 + x) * 0.12; });
-    H.landmarks.push({ x, z, r, icon, title, fact });
+    H.landmarks.push({ x, z, r, icon, title, fact, evidenceId, flow });
     return label;
   }
   function buildSeal(x, z) {
@@ -359,16 +359,44 @@ export function buildWorld(THREE, scene, level) {
     box(0.35, 0.35, 0.35, 0x8a5a2b, 10, 2, 1.4);                  // hanging bucket
     H.colliders.push({ x: 10, z: 2, r: 1.5 });
     addLandmark({ x: 10, z: 2, r: 3, icon: '🪣', title: 'THE WELL',
-      fact: 'Wells gave every neighbourhood fresh water, right beside the streets.', signY: 4.2 });
+      fact: 'Wells gave every neighbourhood fresh water, right beside the streets.', signY: 4.2, evidenceId: 'indus-well' });
     // drainage channels (glowing blue lines)
     [[-10, 0, 12], [2, 6, 10], [-4, -14, 14]].forEach(([x, z, len]) => {
       const ch = new THREE.Mesh(new THREE.BoxGeometry(len, 0.12, 0.5),
         new THREE.MeshStandardMaterial({ color: 0x35b6d9, emissive: 0x1e7fa8, emissiveIntensity: 0.7 }));
       ch.position.set(x, 0.06, z); scene.add(ch);
     });
+    // Environmental water-flow clues: a visible gradient, arrow stones and a
+    // deliberately simulated blockage make the observed route legible.
+    const flowMat = new THREE.MeshStandardMaterial({ color: 0x46d5e8, emissive: 0x137b91, emissiveIntensity: 0.8 });
+    [[-14, 0, 0], [-9, 0, 0], [-4, 0, 0], [1, 0, 0], [6, 0, 0]].forEach(([x, y, z], i) => {
+      const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.45, 4), flowMat);
+      arrow.position.set(x, 0.18 - i * 0.006, z); arrow.rotation.z = -Math.PI / 2; scene.add(arrow);
+    });
+    box(0.8, 0.3, 0.65, 0x6b4423, -1.2, 0, 0.08);
+    addLandmark({ x: -8, z: 0, r: 2.8, icon: '🛣️', title: 'PLANNED STREET', fact: 'The straight lane aligns homes, drains and public routes; the arrows show an inferred slope.', evidenceId: 'indus-street', flow: { direction: 'east', slope: 'gentle downhill', blockage: 'wood and silt', outlet: 'public channel', connection: 'street-to-main-drain' } });
+    addLandmark({ x: 10, z: 2, r: 3, icon: '🪣', title: 'NEIGHBOURHOOD WELL', fact: 'A shared well sits beside a street, linking daily water access to urban planning.', evidenceId: 'indus-well', flow: { direction: 'toward homes', slope: 'surface falls to drain', blockage: 'none visible', outlet: 'house channels', connection: 'well-to-residential-quarter' } });
+    addLandmark({ x: 13, z: 8, r: 2.8, icon: '🚰', title: 'HOUSE OUTLET', fact: 'A small outlet carries used water from a home toward the street drain.', evidenceId: 'indus-house-outlet', flow: { direction: 'southwest', slope: 'outlet lip drops', blockage: 'clear', outlet: 'street channel', connection: 'house-to-street-drain' } });
+    addLandmark({ x: -16, z: -14, r: 5.2, icon: '🌾', title: 'STORAGE & TRADE', fact: 'Raised storage, carts and market goods suggest organised movement of food and craft products.', evidenceId: 'indus-storage-trade' });
+    addLandmark({ x: -14, z: -4, r: 3.4, icon: '🧱', title: 'BRICK STRUCTURE', fact: 'Repeated fired-brick proportions and repairs are visible in the house wall.', evidenceId: 'indus-brick' });
+    addLandmark({ x: -7.5, z: 5.4, r: 4.2, icon: '🔖', title: 'SEAL & CRAFT EVIDENCE', fact: 'A seal and bead-making activity connect craft skill with exchange.', evidenceId: 'indus-seal-craft' });
     stall(-6, 4, 0xd94f3d); stall(-9, 4, 0x3d7bd9, 0.2); stall(-7.5, 7, 0x3d8a4f, -0.15);
+    // Small animated cart and craft bench reinforce the market as a living
+    // urban system without changing movement or collision rules.
+    box(1.8, 0.35, 1.1, 0x7b4a24, -4, 4, 0.55, 0, 0);
+    [-0.65, 0.65].forEach(wx => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.12, 12),
+        new THREE.MeshStandardMaterial({ color: 0x382316, roughness: 0.9 }));
+      wheel.rotation.z = Math.PI / 2; wheel.position.set(-4 + wx, 0.38, 4.65); scene.add(wheel);
+    });
+    const craftGlow = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6),
+      new THREE.MeshStandardMaterial({ color: 0xff9d3c, emissive: 0xff5b13, emissiveIntensity: 1.7 }));
+    craftGlow.position.set(-6.2, 1.05, 6); scene.add(craftGlow);
+    H.dynamics.push((dt, t) => {
+      craftGlow.scale.setScalar(0.8 + Math.sin(t * 5) * 0.2);
+    });
     addLandmark({ x: -7.5, z: 5.4, r: 4.2, icon: '🏪', title: 'MARKETPLACE',
-      fact: 'Merchants traded beads, pottery and grain — weights were carefully standardised!', signY: 4.4 });
+      fact: 'Merchants traded beads, pottery and grain — weights were carefully standardised!', signY: 4.4, evidenceId: 'indus-seal-craft' });
     pot(-7, 5); pot(-7.6, 5.3); pot(11, 3);
     tree(16, -12); tree(-18, -10); tree(18, 12); banner(-11, -2, 0xd94f3d); torch(0, -16); torch(3, -16);
     P.items = [[-4.5, 6.5, 'tablet'], [2, 7.5, 'tablet'], [2.5, -8, 'tablet'], [-9, 0, 'tablet'], [7, 13, 'tablet']];
@@ -376,6 +404,33 @@ export function buildWorld(THREE, scene, level) {
   } else if (level.id === 2) {
     // Nalanda: courtyards, stupas, library, observatory, gardens
     const stone = 0xcbb27f;
+    // Residential study quarters: low brick/stone rooms around a shared court.
+    [[-5, -1], [5, -1], [-5, 7], [5, 7]].forEach(([x, z], i) => {
+      box(3.4, 2.2, 2.8, i % 2 ? 0xb78555 : stone, x, z, 0, 0, 2.1);
+      box(1, 1.35, 0.18, 0x4a2f14, x, z + 1.42);
+      box(3.8, 0.22, 3.2, 0x8e633f, x, z, 2.2);
+    });
+    addLandmark({ x: -5, z: -1, r: 3.5, icon: '🛏️', title: 'RESIDENTIAL STUDY QUARTER',
+      fact: 'Low rooms and shared courtyards make the apprentice’s daily study-and-residence routine visible.', signY: 3.8, evidenceId: 'nalanda-learning-space' });
+    // Copying room: racks, palm-leaf bundles and warm lamps.
+    box(5.5, 2.6, 3.5, 0x9c7044, 11, -7, 0, 0, 3.3);
+    for (let i = 0; i < 4; i++) box(0.45, 1.4, 1.8, [0xd8b36a, 0xc89452, 0xb77b42][i % 3], 9.1 + i * 1.2, -5.1, 0);
+    torch(8.8, -6.2); torch(13.1, -6.2);
+    addLandmark({ x: 11, z: -7, r: 4.2, icon: '🪔', title: 'MANUSCRIPT COPYING ROOM',
+      fact: 'Palm leaves, racks, writing tools and lamps model the material work of copying and preserving texts.', signY: 4.2, evidenceId: 'nalanda-manuscript-culture' });
+    // Teaching and debate court, with a circular water tank for daily use.
+    const court = new THREE.Mesh(new THREE.CircleGeometry(4.2, 24),
+      new THREE.MeshStandardMaterial({ color: 0xe1c994, roughness: 0.95 }));
+    court.rotation.x = -Math.PI / 2; court.position.set(-8, 0.02, 9); scene.add(court);
+    for (let i = 0; i < 6; i++) cyl(0.18, 0.24, 1.7, 0xa57a4f, -10.5 + i, 9.2);
+    addLandmark({ x: -8, z: 9, r: 4.8, icon: '🗣️', title: 'DEBATE & TEACHING COURT',
+      fact: 'A shared court and seating suggest teaching, questioning and discussion rather than solitary storage.', signY: 3.2, evidenceId: 'nalanda-exchange' });
+    cyl(1.6, 1.8, 0.65, 0x8a795e, -1, -2);
+    const water = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.08, 24),
+      new THREE.MeshStandardMaterial({ color: 0x3d9db5, emissive: 0x0a5060, emissiveIntensity: 0.4 }));
+    water.position.set(-1, 0.72, -2); scene.add(water);
+    addLandmark({ x: -1, z: -2, r: 2.8, icon: '💧', title: 'CAMPUS WATER COURT',
+      fact: 'Water areas and gardens help communicate the practical rhythms of a residential campus.', signY: 2.2, evidenceId: 'nalanda-learning-space' });
     [[-12, -6], [12, -6], [-12, 8], [12, 8]].forEach(([x, z]) => {
       box(5, 3, 5, stone, x, z, 0, 0, 3.2);
       const st = new THREE.Mesh(new THREE.ConeGeometry(1.6, 2.2, 4),
@@ -388,7 +443,7 @@ export function buildWorld(THREE, scene, level) {
     [[2.6, 9.6, 0xd94f3d], [3.1, 9.7, 0x3d7bd9], [2.85, 10.1, 0x3d8a4f]].forEach(([bx3, bz3, bc]) =>
       box(0.5, 0.35, 0.7, bc, bx3, bz3, 0, 0.3));
     addLandmark({ x: 0, z: 12, r: 5, icon: '📚', title: 'THE GREAT LIBRARY',
-      fact: 'Nalanda’s libraries are said to have held lakhs of handwritten manuscripts!', signY: 5.4 });
+      fact: 'Accounts describe substantial manuscript collections; this stylised library is an interpretation, not a measured inventory.', signY: 5.4, evidenceId: 'nalanda-manuscript-culture' });
     // observatory platform + stargazing tube
     cyl(3, 3.4, 1, 0x9a9a9a, -14, -14); H.colliders.push({ x: -14, z: -14, r: 3.4 });
     cyl(0.15, 0.15, 3, 0x6a4a1a, -14, -14, 1);
@@ -403,6 +458,8 @@ export function buildWorld(THREE, scene, level) {
     });
     addLandmark({ x: 7, z: 5, r: 4, icon: '🛕', title: 'STUPA GARDEN',
       fact: 'Quiet gardens where monks walked, debated and meditated.', signY: 3.6 });
+    addLandmark({ x: 3, z: 2, r: 3.2, icon: '🧠', title: 'DISCIPLINE MAP',
+      fact: 'Six evidence cards let you classify philosophy, medicine, astronomy, mathematics, language and logic, then test relationships.', signY: 3.4, evidenceId: 'nalanda-disciplines' });
     // garden grove — curated border positions (never random: random clusters
     // can trap the player between trunks). All >=4 apart, off all paths.
     [[-20, -2], [-20, 6], [-20, 12], [-10, 14], [10, 14], [20, 12], [20, 6], [20, -2]]

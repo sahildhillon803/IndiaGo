@@ -12,6 +12,7 @@ import { openQuiz } from './quiz.js';
 import { openPuzzle } from './puzzles.js';
 import { getHistoricalAnswer } from './kalam.js';
 import { toast, achievementPopup, showScreen, burst } from './ui.js';
+import { CODEX, TIMELINE, DECISIONS, NALANDA_DECISION, evidenceById, CHAPTER_EXPERIENCES, FINAL_SYNTHESIS } from './systems.js';
 
 export class Game {
   constructor() {
@@ -44,6 +45,7 @@ export class Game {
     this.bindInputs();
     this.bindMenuButtons();
     this.renderLevelCards(); this.renderMuseum(); this.renderAchv();
+    this.renderCodex(); this.renderTimeline();
     this.applySettings();
     showScreen('screen-menu');
     this.updateMenuSeals();
@@ -69,9 +71,15 @@ export class Game {
   startLevel(id, opts = {}) {
     AudioSys.init();
     this.busy = false;
-    ['quiz-modal', 'puzzle-modal', 'results-modal', 'victory-modal', 'pause-menu', 'dialogue', 'inventory-panel'].forEach(m => document.getElementById(m).classList.add('hidden'));
+    ['quiz-modal', 'puzzle-modal', 'results-modal', 'victory-modal', 'pause-menu', 'dialogue', 'inventory-panel', 'journal-panel'].forEach(m => document.getElementById(m).classList.add('hidden'));
     this.finalMode = (id === 6);
     this.levelId = id;
+    Save.data.currentLevel = id;
+    if (id <= 5) {
+      Save.setQuestState(`chapter-${id}`, Save.data.questStates[`chapter-${id}`] === 'COMPLETED' ? 'COMPLETED' : 'ACTIVE');
+      Save.data.chapterProgress[id] = Save.data.chapterProgress[id] || 0;
+      Save.write();
+    }
     this.inGame = true;
     this.scene.clear();
     if (this.finalMode) {
@@ -218,7 +226,7 @@ export class Game {
         }
       } else { this.stuckT = 0; this.stuckMark = null; }
       // landmark discovery: walking into a famous place pops its story card
-      if (!this.finalMode && this.world.landmarks) {
+      if (!this.finalMode && this.levelId !== 1 && this.world.landmarks) {
         for (const lm of this.world.landmarks) {
           const key = this.levelId + '|' + lm.title;
           if (this.discovered.has(key)) continue;
@@ -250,6 +258,14 @@ export class Game {
       if (c.taken) continue;
       const d = p.distanceTo(c.pos);
       if (d < 2.8) cands.push({ kind: 'item', ref: c, d, label: `🔍 INVESTIGATE — ${lvl.collectible.name}` });
+    }
+    if ((this.levelId === 1 || this.levelId === 2) && this.world.landmarks) {
+      for (const lm of this.world.landmarks) {
+        const key = this.levelId + '|' + lm.title;
+        if (this.discovered.has(key)) continue;
+        const d = p.distanceTo(new THREE.Vector3(lm.x, 0, lm.z));
+        if (d < lm.r) cands.push({ kind: 'landmark', ref: lm, d, label: `🔍 OBSERVE — ${lm.title}` });
+      }
     }
     if (this.world.gate) {
       const d = p.distanceTo(this.world.gate.pos);
@@ -285,6 +301,7 @@ export class Game {
     if (!n) return;
     AudioSys.click();
     if (n.kind === 'npc') this.openDialogue(n.ref.def);
+    else if (n.kind === 'landmark') this.discoverLandmark(n.ref, this.levelId + '|' + n.ref.title);
     else if (n.kind === 'item') this.takeCollectible(n.ref, false);
     else if (n.kind === 'gate') this.openGate();
     else if (n.kind === 'seal') this.takeSeal();
@@ -323,6 +340,10 @@ export class Game {
       return;
     }
     if (this.quizPassed) { toast('Gate is open — the puzzle already awaits its solver…'); this.openPuzzleNow(); return; }
+    if (this.levelId >= 3) {
+      this.openChapterExperience();
+      return;
+    }
     this.busy = true;
     openQuiz({
       title: lvl.gateQuizTitle, questions: QUIZZES[this.levelId], passCount: 4,
@@ -340,10 +361,69 @@ export class Game {
     });
   }
 
+  openChapterExperience() {
+    const exp = CHAPTER_EXPERIENCES[this.levelId];
+    if (!exp) return;
+    this.busy = true;
+    const body = document.getElementById('puzzle-body');
+    document.getElementById('puzzle-title').textContent = exp.title;
+    body.innerHTML = `
+      <p><b>ROLE:</b> ${exp.role}</p><p>${exp.context}</p><p><b>PROBLEM:</b> ${exp.problem}</p>
+      <div class="phase-stage"><h3>1 · Investigate and place</h3><p>${exp.puzzle.prompt}</p>
+      ${exp.puzzle.options.map((o, i) => `<button class="btn phase-option" data-stage="puzzle" data-value="${i}">${o}</button>`).join('')}</div>
+      <div class="phase-stage hidden" id="phase-analysis"><h3>2 · Inspect evidence</h3><p>${exp.analysis.prompt}</p>
+      ${exp.analysis.options.map((o, i) => `<button class="btn phase-option" data-stage="analysis" data-value="${i}">${o}</button>`).join('')}</div>
+      <div class="phase-stage hidden" id="phase-logistics"><h3>3 · Action and consequence</h3><p>${exp.logistics.prompt}</p>
+      ${exp.logistics.options.map((o, i) => `<button class="btn phase-option" data-stage="logistics" data-value="${i}">${o}</button>`).join('')}</div>
+      <div class="phase-stage hidden" id="phase-decision"><h3>4 · Administration decision</h3><p>${exp.decision.prompt}</p>
+      ${exp.decision.options.map((o, i) => `<button class="btn phase-option" data-stage="decision" data-value="${i}">${o}</button>`).join('')}</div>
+      <div class="phase-stage hidden" id="phase-reflection"><h3>5 · Reflection</h3>
+      <p>What evidence changed your interpretation? (Your response is saved.)</p>
+      <textarea id="phase-reflection-text" maxlength="600" rows="3" placeholder="I think this because…"></textarea>
+      <button class="btn primary" id="phase-finish">Save reflection and complete chapter</button></div>
+      <p id="phase-feedback" class="phase-feedback"></p>`;
+    document.getElementById('puzzle-modal').classList.remove('hidden');
+    const state = { puzzle: false, analysis: false, logistics: false, decision: false };
+    body.querySelectorAll('.phase-option').forEach(btn => btn.addEventListener('click', () => {
+      const stage = btn.dataset.stage, value = Number(btn.dataset.value);
+      const expected = exp[stage].answer;
+      const ok = stage === 'puzzle'
+        ? (Array.isArray(expected) ? exp.puzzle.options[value] === expected[0] : value === expected)
+        : value === expected;
+      state[stage] = true;
+      btn.classList.add(ok ? 'correct' : 'wrong');
+      document.getElementById('phase-feedback').textContent = ok
+        ? '✓ Useful reasoning recorded. Compare the next clue.'
+        : 'That choice is possible to discuss, but the strongest match is marked by the available evidence.';
+      const next = { puzzle: 'phase-analysis', analysis: 'phase-logistics', logistics: 'phase-decision', decision: 'phase-reflection' }[stage];
+      if (next) document.getElementById(next).classList.remove('hidden');
+      Save.addMastery(exp.skills[Math.min(Object.keys(state).indexOf(stage), exp.skills.length - 1)], ok ? 3 : 1);
+    }));
+    document.getElementById('phase-finish').addEventListener('click', () => {
+      if (!Object.values(state).every(Boolean)) { document.getElementById('phase-feedback').textContent = 'Investigate each stage before completing the archive entry.'; return; }
+      Save.saveReflection(document.getElementById('phase-reflection-text').value);
+      Save.recordChapterExperience(this.levelId, { evidence: exp.evidence.map(e => e.id), codex: exp.codex, skills: exp.skills, choice: 'evidence-led', consequence: 'recorded-and-compared' });
+      this.quizPassed = true; this.busy = false;
+      document.getElementById('puzzle-modal').classList.add('hidden');
+      this.renderCodex(); this.sealReady = true; this.world.seal.mesh.visible = true;
+      toast('✨ Evidence cards, mastery and Codex entries saved. The Time Seal appears!', 3600);
+      this.updateHUD();
+    });
+  }
+
   openPuzzleNow() {
     this.busy = true;
     openPuzzle(this.levelId, { onSolve: () => {
       this.busy = false;
+      Save.addMastery('problemSolving', 2);
+      if (this.levelId === 2) {
+        Save.addMastery('evidenceAnalysis', 3);
+        Save.addMastery('chronology', 2);
+        Save.addMastery('culturalUnderstanding', 2);
+        Save.addEvidence('nalanda-disciplines');
+        Save.setQuestState('chapter-2-knowledge-network', 'COMPLETED');
+        this.renderCodex();
+      }
       this.sealReady = true;
       this.world.seal.mesh.visible = true;
       AudioSys.seal();
@@ -363,6 +443,7 @@ export class Game {
     this.levelDone = true;
     const lvl = levelById(this.levelId);
     Save.addPoints(50);
+    Save.addMastery('problemSolving', 1);
     Save.completeLevel(this.levelId, true);
     this.world.seal.mesh.visible = false;
     AudioSys.seal();
@@ -391,23 +472,45 @@ export class Game {
 
   openFinal() {
     this.busy = true;
-    openQuiz({
-      title: '🏆 FINAL HISTORY CHAMBER', questions: FINAL_QUESTIONS, passCount: 4,
-      onPass: (score) => {
-        this.busy = false;
-        Save.completeFinal();
-        Save.addPoints(100);
-        this.checkNewAchievements();
-        AudioSys.seal();
-        this.showVictory(score);
-      },
-      onClose: () => { this.busy = false; }
+    const body = document.getElementById('puzzle-body');
+    document.getElementById('puzzle-title').textContent = FINAL_SYNTHESIS.title;
+    body.innerHTML = `<p>${FINAL_SYNTHESIS.prompt}</p>
+      <h3>Grand timeline</h3><p class="muted">Place eras in learning order; no unsupported exact dates are required.</p>
+      <div class="phase-stage">${TIMELINE.slice(0, 5).map((x, i) => `<button class="btn phase-option" data-era="${i}">${i + 1}. ${x}</button>`).join('')}</div>
+      <h3>Source detective</h3><div class="phase-stage">${FINAL_SYNTHESIS.sourceLabels.map(x => `<button class="btn phase-source">${x}</button>`).join('')}</div>
+      <h3>Cause and effect connections</h3><div class="phase-stage">${FINAL_SYNTHESIS.relationships.map((r, i) => `<button class="btn phase-connection" data-connection="${i}">${r[0]} → ${r[1]}</button>`).join('')}</div>
+      <p>Collected evidence cards: <b>${Save.data.evidence.length}</b> · Codex entries: <b>${Save.data.codex.length}</b></p>
+      <textarea id="phase-reflection-text" maxlength="600" rows="3" placeholder="Kalam asks: what makes a historical claim responsible?"></textarea>
+      <button class="btn primary" id="phase-finalise">Save Historical Thinker Profile</button><p id="phase-feedback"></p>`;
+    document.getElementById('puzzle-modal').classList.remove('hidden');
+    body.querySelectorAll('.phase-connection').forEach(btn => btn.addEventListener('click', () => {
+      Save.recordConnection(FINAL_SYNTHESIS.relationships[Number(btn.dataset.connection)].join(' → '));
+      btn.classList.add('correct'); btn.textContent += ' ✓ saved';
+    }));
+    document.getElementById('phase-finalise').addEventListener('click', () => {
+      Save.saveReflection(document.getElementById('phase-reflection-text').value);
+      Save.completeFinal(); Save.addPoints(100); Save.addMastery('evidenceAnalysis', 3);
+      document.getElementById('puzzle-modal').classList.add('hidden'); this.busy = false; this.checkNewAchievements(); this.showVictory(Save.data.profile.connections);
     });
   }
 
   discoverLandmark(lm, key) {
     this.discovered.add(key);
     Save.addPoints(5);
+    if (this.levelId === 1) {
+      if (lm.evidenceId) Save.recordObservation(lm.evidenceId, lm.flow || { route: lm.title });
+      else Save.addEvidence('harappa-drains');
+      Save.setQuestState(`observe-${lm.evidenceId || 'drainage'}`, 'COMPLETED');
+      Save.addMastery('causeEffect', 1);
+      if (lm.flow) this.kalamSay(`Flow clue recorded: direction ${lm.flow.direction}; slope ${lm.flow.slope}; blockage ${lm.flow.blockage}; outlet ${lm.flow.outlet}; connection ${lm.flow.connection}.`);
+    } else if (this.levelId === 2) {
+      if (lm.evidenceId) Save.recordObservation(lm.evidenceId, { location: lm.title, observed: lm.fact });
+      Save.setQuestState(`observe-${lm.evidenceId || 'campus'}`, 'COMPLETED');
+      Save.addMastery('culturalUnderstanding', 1);
+      Save.addMastery('chronology', 1);
+      this.renderCodex();
+    }
+    Save.addMastery('exploration', 1);
     AudioSys.collect();
     this.updateHUD();
     document.getElementById('disc-icon').textContent = lm.icon;
@@ -424,18 +527,81 @@ export class Game {
     this.busy = true;
     AudioSys.talk();
     let i = 0;
+    const lines = [...def.lines];
+    if (this.levelId === 1 && Save.data.decisions['indus-water']) {
+      const choice = Save.data.decisions['indus-water'].choice;
+      if (def.name === 'Resident') lines.push(choice === 'repair-blockage' ? 'The visible blockage is gone; thank you for making the lane usable.' : 'Your network map helped us notice how our outlet joins the shared drain.');
+      if (def.name === 'Craft Worker') lines.push(choice === 'trace-network' ? 'Your route notes connect our workshop to the public channel.' : 'The repaired channel keeps silt from pooling by my bench.');
+      if (def.name === 'Young Apprentice') lines.push('Your evidence board distinguishes an observation from an interpretation — that is careful history.');
+    }
+    if (this.levelId === 2 && Save.data.decisions['nalanda-preservation']) {
+      const choice = Save.data.decisions['nalanda-preservation'].choice;
+      if (def.name === 'Manuscript Keeper') lines.push(choice === 'nalanda-stabilize' ? 'Your catalogue lets us compare damaged leaves before making a confident claim.' : 'The quick copy is useful, but your journal must mark the uncertain letters.');
+      if (def.name === 'Debate Scholar Dev') lines.push(choice === 'nalanda-stabilize' ? 'Good reasoning begins by naming the evidence and its limits.' : 'Speed helped, yet discussion still tests whether the reconstruction fits.');
+      if (def.name === 'Vaidya Anika') lines.push('Your network shows observation as a method shared by sky study and treatment knowledge.');
+    }
     const box = document.getElementById('dialogue');
     box.classList.remove('hidden');
     document.getElementById('dlg-name').textContent = `${def.icon} ${def.name}`;
     const next = () => {
       AudioSys.click();
-      if (i >= def.lines.length) { box.classList.add('hidden'); this.busy = false; return; }
-      document.getElementById('dlg-text').textContent = def.lines[i];
-      document.getElementById('dlg-next').textContent = i === def.lines.length - 1 ? 'Farewell →' : 'Continue →';
+      if (i >= lines.length) {
+        box.classList.add('hidden'); this.busy = false;
+        if (this.levelId === 1 && (def.name === 'City Elder' || def.name === 'Infrastructure Elder') && !Save.data.decisions['indus-water']) this.openChapterDecision();
+        if (this.levelId === 2 && def.name === 'Manuscript Keeper' && !Save.data.decisions['nalanda-preservation']) this.openNalandaDecision();
+        return;
+      }
+
+      document.getElementById('dlg-text').textContent = lines[i];
+      document.getElementById('dlg-next').textContent = i === lines.length - 1 ? 'Farewell →' : 'Continue →';
       i++;
     };
     document.getElementById('dlg-next').onclick = next;
     next();
+  }
+
+  openNalandaDecision() {
+    const d = NALANDA_DECISION, box = document.getElementById('dialogue');
+    this.busy = true; box.classList.remove('hidden');
+    document.getElementById('dlg-name').textContent = '⚖️ Preservation decision · fictional disruption';
+    document.getElementById('dlg-text').textContent = d.prompt;
+    const next = document.getElementById('dlg-next');
+    next.innerHTML = d.choices.map(c => `<button class="btn decision-choice" data-choice="${c.id}">${c.label}</button>`).join(' ');
+    next.onclick = e => {
+      const b = e.target.closest('[data-choice]'); if (!b) return;
+      const choice = d.choices.find(c => c.id === b.dataset.choice);
+      Save.recordDecision(d.id, choice.id, choice.consequence);
+      Save.setQuestState('chapter-2-preservation', 'COMPLETED');
+      Save.addMastery('evidenceAnalysis', 3); Save.addMastery('chronology', 2);
+      Save.addMastery(choice.id === 'nalanda-stabilize' ? 'culturalUnderstanding' : 'causeEffect', 2);
+      Save.addPoints(choice.id === 'nalanda-stabilize' ? 20 : 12);
+      box.classList.add('hidden'); this.busy = false;
+      toast(`⚖️ ${choice.text}`); this.renderCodex();
+    };
+  }
+
+  openChapterDecision() {
+    const d = DECISIONS[0];
+    const box = document.getElementById('dialogue');
+    const text = document.getElementById('dlg-text');
+    const next = document.getElementById('dlg-next');
+    this.busy = true; box.classList.remove('hidden');
+    document.getElementById('dlg-name').textContent = '⚖️ Chapter 1 Decision';
+    text.textContent = d.prompt;
+    next.textContent = '';
+    next.innerHTML = d.choices.map(c => `<button class="btn decision-choice" data-choice="${c.id}">${c.label}</button>`).join(' ');
+    next.onclick = e => {
+      const b = e.target.closest('[data-choice]'); if (!b) return;
+      const choice = d.choices.find(c => c.id === b.dataset.choice);
+      Save.recordDecision(d.id, choice.id, choice.consequence);
+      Save.setQuestState('chapter-1-decision', 'COMPLETED');
+      Save.addMastery('stewardship', 1);
+      Save.addMastery(choice.id === 'trace-network' ? 'spatialUnderstanding' : 'causeEffect', 3);
+      Save.addPoints(choice.id === 'trace-network' ? 20 : 12);
+      if (choice.id === 'trace-network') Save.addEvidence('indus-street');
+      box.classList.add('hidden'); this.busy = false;
+      toast(`⚖️ ${choice.text}`); this.renderCodex();
+    };
   }
 
   kalamSay(text) {
@@ -498,8 +664,14 @@ export class Game {
     document.getElementById('results-title').textContent = 'LEVEL COMPLETE!';
     document.getElementById('results-seal').textContent = lvl.sealName;
     document.getElementById('results-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-    document.getElementById('results-detail').textContent =
-      `${lvl.collectible.icon} ${this.found}/${lvl.collectible.target} · Quiz best ${Save.data.quizScores[this.levelId] || 0}/5 · +50 seal bonus`;
+    const resultDetail = `${lvl.collectible.icon} ${this.found}/${lvl.collectible.target} · Quiz best ${Save.data.quizScores[this.levelId] || 0}/5 · +50 seal bonus`;
+    document.getElementById('results-detail').innerHTML = resultDetail +
+      (this.levelId === 1 ? `<br><br><b>EVIDENCE BOARD</b>: ${Save.data.evidence.filter(id => id.indexOf('indus-') === 0 || id === 'harappa-drains').length} observations recorded.<br><b>Question</b>: What supports a connected urban water network?<br><b>Response</b>: aligned streets, slope, outlets, wells and drains together.` : '');
+    if (this.levelId === 1) {
+      ['codex-indus-planning', 'codex-indus-drainage', 'codex-indus-seals', 'codex-craft-trade', 'codex-daily-life'].forEach(id => { if (!Save.data.codex.includes(id)) Save.data.codex.push(id); });
+      Save.addMastery('evidenceAnalysis', 3); Save.addMastery('spatialUnderstanding', 3); Save.addMastery('causeEffect', 3);
+      this.renderCodex();
+    }
     document.getElementById('results-next').textContent =
       this.levelId < 5 ? `🌀 Enter Portal to ${lvl.portalTo} →` : '🗺️ Return to Chrono Map →';
     document.getElementById('results-modal').classList.remove('hidden');
@@ -528,8 +700,9 @@ export class Game {
         <div class="lc-icon">${locked ? '🔒' : l.icon}</div>
         <div class="lc-name">Level ${l.id} — ${l.name}</div>
         <div class="lc-era">${l.era}</div>
-        <div class="lc-status">${locked ? '🔒 LOCKED' : done ? `✅ Done · ${'⭐'.repeat(Save.data.stars[l.id] || 1)} · ${Save.data.seals.includes(l.id) ? '🔱 Seal' : ''}` : '✨ UNLOCKED'}</div>
-        <div class="lc-art">🏺 ${Save.data.artifacts[l.id] || 0}/${l.collectible.target}</div>`;
+        <div class="lc-mission">🎯 <b>Mission:</b> ${l.mission || l.tagline}</div>
+        <div class="lc-status">${locked ? '🔒 LOCKED' : done ? `✅ Done · ${'⭐'.repeat(Save.data.stars[l.id] || 1)} · ${Save.data.seals.includes(l.id) ? '🔱 Seal' : ''}` : '✨ UNLOCKED · Tap to Select Mission'}</div>
+        <div class="lc-art">🏺 ${Save.data.artifacts[l.id] || 0}/${l.collectible.target} ${l.collectible.name}s</div>`;
       if (!locked) card.addEventListener('click', () => { AudioSys.click(); this.startLevel(l.id); });
       else card.addEventListener('click', () => { AudioSys.fail(); toast('🔒 Complete the previous era to unlock this portal!'); });
       wrap.appendChild(card);
@@ -578,6 +751,19 @@ export class Game {
       d.innerHTML = `<span class="ach-ic">${has ? a.icon : '🔒'}</span><div><b>${a.name}</b><br><small>${a.desc}</small></div>`;
       wrap.appendChild(d);
     });
+  }
+
+  renderCodex() {
+    const wrap = document.getElementById('codex-list'); if (!wrap) return;
+    wrap.innerHTML = CODEX.map(e => {
+      const open = Save.data.codex.includes(e.id);
+      return `<div class="codex-row ${open ? 'has' : 'ghost'}"><b>${open ? '📖' : '🔒'} ${open ? e.title : 'Unknown entry'}</b><small>${open ? e.type + ' · ' + e.text : 'Discover evidence or make a decision to unlock this entry.'}</small></div>`;
+    }).join('');
+  }
+
+  renderTimeline() {
+    const wrap = document.getElementById('timeline-list'); if (!wrap) return;
+    wrap.innerHTML = TIMELINE.map((label, i) => `<div class="timeline-item ${i < Save.data.seals.length ? 'seen' : ''}"><span>${i < Save.data.seals.length ? '●' : '○'}</span><b>${label}</b></div>`).join('');
   }
 
   updateMenuSeals() {
@@ -646,6 +832,8 @@ export class Game {
     document.getElementById('btn-jump').addEventListener('click', () => { this.input.jump = true; setTimeout(() => this.input.jump = false, 120); });
     document.getElementById('btn-act').addEventListener('click', () => this.doInteract());
     document.getElementById('btn-inv').addEventListener('click', () => this.toggleInventory());
+    document.getElementById('btn-journal').addEventListener('click', () => this.toggleJournal(true));
+    document.getElementById('journal-close').addEventListener('click', () => this.toggleJournal(false));
     document.getElementById('btn-kalam-m').addEventListener('click', () => this.toggleKalam());
   }
 
@@ -664,6 +852,23 @@ export class Game {
     }
   }
 
+  toggleJournal(force) {
+      const panel = document.getElementById('journal-panel');
+      const show = force === undefined ? panel.classList.contains('hidden') : force;
+      panel.classList.toggle('hidden', !show);
+      if (!show) return;
+      const observed = Object.keys(Save.data.observations || {}).filter(id => evidenceById(id)?.chapter === 2);
+      const learned = Save.data.decisions['nalanda-preservation'];
+      const cards = observed.length ? observed.map(id => {
+        const e = evidenceById(id);
+        return `<li><b>Observed:</b> ${e.title}<br><small>${e.description}</small><br><em>Supports:</em> ${e.historicalSignificance}</li>`;
+      }).join('') : '<li>Explore the courtyards, study rooms, copying room and debate court to record observations.</li>';
+      document.getElementById('journal-body').innerHTML = `
+        <p><b>What I observed</b></p><ul>${cards}</ul>
+        <p><b>What I learned</b></p><p>${learned ? (learned.choice === 'nalanda-stabilize' ? 'Preservation starts with stabilising, cataloguing and comparing evidence.' : 'Speed can save a fragment, but uncertainty must remain visible.') : 'Classify the disciplines, then test their connections in the knowledge network.'}</p>
+        <p><b>Evidence-first reflection</b></p><p>A diversity of subjects and spaces suggests a broad residential learning environment; it is an interpretation supported by several clues, not a trivia claim.</p>`;
+  }
+
   togglePause(force) {
     if (!this.inGame) return;
     const p = document.getElementById('pause-menu');
@@ -680,6 +885,7 @@ export class Game {
     document.getElementById('btn-levels').addEventListener('click', () => { AudioSys.click(); this.renderLevelCards(); go('screen-levels'); });
     document.getElementById('btn-museum').addEventListener('click', () => { AudioSys.click(); this.renderMuseum(); go('screen-museum'); });
     document.getElementById('btn-achv').addEventListener('click', () => { AudioSys.click(); this.renderAchv(); go('screen-achv'); });
+    document.getElementById('btn-codex').addEventListener('click', () => { AudioSys.click(); this.renderCodex(); this.renderTimeline(); go('screen-codex'); });
     document.getElementById('btn-settings').addEventListener('click', () => go('screen-settings'));
     document.getElementById('btn-demo').addEventListener('click', () => { AudioSys.click(); this.startLevel(1, { demo: true }); });
     document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => {
@@ -711,6 +917,18 @@ export class Game {
     });
     document.getElementById('victory-map').addEventListener('click', () => {
       AudioSys.click(); document.getElementById('victory-modal').classList.add('hidden'); this.busy = false; this.toChronoMap();
+    });
+    document.getElementById('victory-evidence').addEventListener('click', () => {
+      this.renderCodex(); document.getElementById('victory-modal').classList.add('hidden'); this.busy = false; showScreen('screen-codex');
+    });
+    document.getElementById('victory-codex').addEventListener('click', () => {
+      this.renderCodex(); this.renderTimeline(); document.getElementById('victory-modal').classList.add('hidden'); this.busy = false; showScreen('screen-codex');
+    });
+    document.getElementById('victory-replay').addEventListener('click', () => {
+      document.getElementById('victory-modal').classList.add('hidden'); this.busy = false; this.startLevel(3);
+    });
+    document.getElementById('victory-profile').addEventListener('click', () => {
+      document.getElementById('victory-stats').innerHTML += `<br><br><b>HISTORICAL THINKER PROFILE</b><br>Connections: ${Save.data.profile.connections} · Decisions: ${Save.data.profile.decisions}<br>${Save.data.profile.reflection || 'No reflection saved yet.'}`;
     });
     // hud buttons
     document.getElementById('btn-inv-hud').addEventListener('click', () => this.toggleInventory());

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
-    "test": "node --check server.js && node --check js/main.js && node --check js/game.js && node --check js/world.js && node --check js/player.js && node --check js/data.js && node --check js/ui.js && node --check js/quiz.js && node --check js/puzzles.js && node --check js/save.js && node --check js/audio.js && node --check js/kalam.js && echo OK"
+    "test": "node --check server.js && node --check js/main.js && node --check js/game.js && node --check js/world.js && node --check js/player.js && node --check js/data.js && node --check js/systems.js && node --check js/ui.js && node --check js/quiz.js && node --check js/puzzles.js && node --check js/save.js && node --check js/audio.js && node --check js/kalam.js && echo OK"
   },
   "devDependencies": {
     "serve": "^14.2.0"

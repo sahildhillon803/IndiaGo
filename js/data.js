@@ -9,7 +9,7 @@ export const LEVELS = [
     id: 1, key: 'indus', name: 'The Lost City', era: 'Indus Valley Civilization · c. 2600–1900 BCE',
     icon: '🟤', color: 0xd9a066, sky: 0xffd9a0, fog: 0xf2c179, ground: 0xcfa15e,
     tagline: 'Restore the planned city of the Harappans.',
-    mission: 'RESTORE THE CITY — Find 5 civilization tablets',
+    mission: 'READ THE CITY — Observe water, streets, homes, trade and craft',
     collectible: { name: 'Civilization Tablet', icon: '🧱', target: 5, points: 10 },
     npcs: [
       { name: 'City Elder', icon: '🧙', pos: [6, 0, 4], color: 0x8a5a2b,
@@ -22,7 +22,17 @@ export const LEVELS = [
         lines: [
           'My pots carry grain and water to every house.',
           'A tablet rests where pots are stacked high — near my stall, child!'
-        ] }
+        ] },
+      { name: 'Infrastructure Elder', icon: '🧓', pos: [4, 0, -2], color: 0x6f4b2e,
+        lines: ['Water leaves clues: follow its slope, notice blockages, and find the outlet.', 'This is an archaeology-inspired simulation, not a record of one historical event.'] },
+      { name: 'Craft Worker', icon: '🧵', pos: [-6, 0, 6], color: 0x8d3d68,
+        lines: ['Beads, tools and seals show skilled work in a busy settlement.', 'Trace the drain past my workshop: craft and water share the street.'] },
+      { name: 'Trader', icon: '🪙', pos: [-8, 0, 2], color: 0x2f6f8f,
+        lines: ['Storage keeps grain safe while carts move goods through planned lanes.', 'A seal can mark a package, but it cannot tell us every story.'] },
+      { name: 'Resident', icon: '🏠', pos: [13, 0, 8], color: 0x557b39,
+        lines: ['Our house outlet carries used water toward the street channel.', 'The well is shared; daily life depends on many connected places.'] },
+      { name: 'Young Apprentice', icon: '🧑‍🎓', pos: [1, 0, 9], color: 0x3b628c,
+        lines: ['I counted the brick courses and watched water run downhill.', 'Can you explain which evidence supports your reconstruction?'] }
     ],
     gateQuizTitle: '🔱 HISTORY GATE — Indus Valley',
     puzzleTitle: 'Drainage Puzzle — guide water to the Great Bath',
@@ -32,8 +42,8 @@ export const LEVELS = [
   {
     id: 2, key: 'nalanda', name: "The Scholar's Challenge", era: 'Ancient India · Nalanda · c. 5th–12th century CE',
     icon: '🟡', color: 0xe8c547, sky: 0xbfe3ff, fog: 0xcfe8d8, ground: 0x8fbf7f,
-    tagline: 'Recover the lost scrolls of the great university.',
-    mission: 'THE LOST SCROLLS — Find 5 missing scrolls',
+    tagline: 'Reconstruct a living network of ancient scholarship.',
+    mission: 'THE DAMAGED ARCHIVE — Fictional disruption; preserve, classify and reconnect knowledge',
     collectible: { name: 'Palm-leaf Scroll', icon: '📜', target: 5, points: 10 },
     npcs: [
       { name: 'Acharya', icon: '👳', pos: [5, 0, 2], color: 0xcf7a1e,
@@ -47,6 +57,24 @@ export const LEVELS = [
           'I copied sutras in the library till my fingers ached!',
           'Check the library racks, the debate courtyard and the dormitory veranda.'
         ] }
+      ,{ name: 'Vaidya Anika', icon: '🌿', pos: [10, 0, 9], color: 0x4d8b52,
+        lines: [
+          'This disruption is fictional: a fallen lamp damaged part of our manuscript collection.',
+          'Observe how medicine joins careful observation to treatment knowledge.',
+          'Do not infer a whole curriculum from one text; compare the evidence cards.'
+        ] },
+      { name: 'Debate Scholar Dev', icon: '🗣️', pos: [-10, 0, 10], color: 0x7651a8,
+        lines: [
+          'In the debate court, claims are tested by reasons and counter-arguments.',
+          'Students and teachers travelled; ideas moved through discussion and copying.',
+          'Which evidence supports your reconstruction, rather than a colourful legend?'
+        ] },
+      { name: 'Manuscript Keeper', icon: '🪔', pos: [5, 0, -10], color: 0x9b6235,
+        lines: [
+          'Palm leaves need preparation, ink, stringing and careful storage.',
+          'The damaged archive is an in-game fiction, not a recorded Nalanda event.',
+          'You must choose between speed and a slower, evidence-first preservation.'
+        ] }
     ],
     gateQuizTitle: '🔱 HISTORY GATE — Nalanda',
     puzzleTitle: 'Library Puzzle — shelve the scrolls in order',
@@ -56,8 +84,8 @@ export const LEVELS = [
   {
     id: 3, key: 'chola', name: 'Rise of the Cholas', era: 'Chola Dynasty · c. 9th–13th century CE',
     icon: '🔵', color: 0x4aa3df, sky: 0x9fd4ff, fog: 0xbcd9f5, ground: 0x9dbb7a,
-    tagline: 'Rebuild the great temple, piece by piece.',
-    mission: 'THE TEMPLE BLUEPRINT — Find 5 architectural pieces',
+    tagline: 'Engineer a Chola-period temple and read its working networks.',
+    mission: 'TEMPLE, WORKSHOP & PORT — investigate, match and decide',
     collectible: { name: 'Temple Design Piece', icon: '🛕', target: 5, points: 10 },
     npcs: [
       { name: 'Sthapati (Architect)', icon: '🏛️', pos: [6, 0, 6], color: 0x9c5b1e,
@@ -70,7 +98,11 @@ export const LEVELS = [
         lines: [
           'Our ships carried spices and stories to distant shores!',
           'A blueprint page fluttered down near my boat. The port wind is mischievous.'
-        ] }
+        ] },
+      { name: 'Bronze Artisan', icon: '🪔', pos: [-4, 0, -8], color: 0x8b5a2b,
+        lines: ['The lost-wax process is a skilled craft; compare the object, not a legend.', 'Our workshop evidence helps you distinguish bronze art from stone sculpture.'] }
+      ,{ name: 'Port Merchant', icon: '⚓', pos: [-12, 0, 2], color: 0x376b8b,
+        lines: ['Capacity, value and destination matter in this lightweight trade simulation.', 'A manifest is evidence for a shipment, not proof of every route.'] }
     ],
     gateQuizTitle: '🔱 HISTORY GATE — The Cholas',
     puzzleTitle: 'Temple Puzzle — stack the vimana in order',
@@ -80,8 +112,8 @@ export const LEVELS = [
   {
     id: 4, key: 'fort', name: 'The Fort of Secrets', era: 'Medieval India · Forts & Sultanates',
     icon: '🟠', color: 0xd97b2e, sky: 0xffc98a, fog: 0xe8b083, ground: 0xb08a5a,
-    tagline: 'Piece together the hidden inscription.',
-    mission: 'THE HIDDEN MESSAGE — Find 4 inscription pieces',
+    tagline: 'Survey one coherent setting: Chittorgarh Fort in fifteenth-century Mewar.',
+    mission: 'THE FORT SURVEY — map routes, water and stores',
     collectible: { name: 'Inscription Piece', icon: '🪨', target: 4, points: 15 },
     npcs: [
       { name: 'Guard Veer', icon: '💂', pos: [4, 0, 8], color: 0x7a3b2e,
@@ -92,9 +124,11 @@ export const LEVELS = [
         ] },
       { name: 'Court Scholar', icon: '📖', pos: [-6, 0, -8], color: 0x4a5d8a,
         lines: [
-          'Which monument did Shah Jahan raise for love? Keep that answer ready…',
-          'The secret chamber opens only for those who honour the past.'
-        ] }
+          'This survey stays with Chittorgarh Fort in fifteenth-century Mewar.',
+          'Compare walls, gates, water stores and the fictional gameplay inscription; do not import another dynasty into this setting.'
+        ] },
+      { name: 'Water Keeper', icon: '💧', pos: [10, 0, -4], color: 0x2e7181,
+        lines: ['Reservoirs and stores are connected to the fort’s geography.', 'This Chittorgarh survey is one setting, not a mixture of dynasties.'] }
     ],
     gateQuizTitle: '🔱 HISTORY GATE — Medieval India',
     puzzleTitle: 'Secret Chamber — four trials of the fort',
@@ -102,10 +136,10 @@ export const LEVELS = [
     portalTo: 'the freedom struggle'
   },
   {
-    id: 5, key: 'freedom', name: 'The Road to Freedom', era: 'Independence Movement · 19th–20th century',
+    id: 5, key: 'freedom', name: 'The Road to Freedom',     era: 'Indian freedom movement · 1930s–1940s newsroom simulation',
     icon: '🟢', color: 0x4caf6d, sky: 0xaee3ff, fog: 0xc4dfe8, ground: 0x8a8a72,
-    tagline: 'Rebuild the newspaper that woke a nation.',
-    mission: 'THE MISSING NEWSPAPER — Find 5 newspaper pieces',
+    tagline: 'Work as a young journalist and volunteer: verify before you publish.',
+    mission: 'THE NEWSROOM — classify, communicate and participate responsibly',
     collectible: { name: 'Newspaper Piece', icon: '📰', target: 5, points: 10 },
     npcs: [
       { name: 'Editor Desai', icon: '🖋️', pos: [5, 0, 3], color: 0x3b3b3b,
@@ -118,7 +152,9 @@ export const LEVELS = [
         lines: [
           'Trains carried newspapers — and hopes — to every corner of Bharat.',
           'Something fluttered onto platform 2 this morning…'
-        ] }
+        ] },
+      { name: 'Volunteer Asha', icon: '🗞️', pos: [-8, 0, 5], color: 0x2c6b63,
+        lines: ['Classify a source as EVIDENCE, INTERPRETATION or UNCERTAIN.', 'Our civic choices have tradeoffs; verify before sharing.'] }
     ],
     gateQuizTitle: '🔱 HISTORY GATE — Freedom Struggle',
     puzzleTitle: 'Press Puzzle — lay out the front page',
@@ -163,7 +199,7 @@ export const QUIZZES = {
     { q: '“Jai Hind” and “Vande Mataram” are…', options: ['Stirring slogans and songs of freedom', 'Types of sweets', 'Names of trains', 'Board games'], answer: 0, fact: 'They united millions during the struggle for independence.' },
     { q: 'India became independent in the year…', options: ['1947', '1800', '2001', '1599'], answer: 0, fact: 'India gained independence on 15 August 1947.' }
   ]
-};
+}
 
 export const FINAL_QUESTIONS = [
   { q: 'Which civilization is known for planned cities and drainage?', options: ['Indus Valley Civilization', 'Roman Empire', 'Aztec Empire', 'Viking settlements'], answer: 0 },

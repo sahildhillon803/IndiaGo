@@ -40,7 +40,7 @@
           <li><span class="feature-icon">🏛️</span> Archaeological 3D Artifacts · 24-Spoke Ashoka Chakra</li>
           <li><span class="feature-icon">✦</span> Storyline Quests: Harappa, Vedic, Empires &amp; Rivers</li>
           <li><span class="feature-icon">🏆</span> Dynamic XP, Real-Time Badges &amp; Leaderboards</li>
-          <li><span class="feature-icon">🔒</span> Prototype Demonstration · Browser Local Storage Session</li>
+          <li><span class="feature-icon">⚡</span> Demo Workspace · Instant Bypass for Evaluation</li>
         </ul>
       </section>
 
@@ -49,10 +49,22 @@
           <div class="auth-tabs">
             <button id="tab-login" class="tab-btn" type="button">LOGIN</button>
             <button id="tab-register" class="tab-btn active" type="button">REGISTER</button>
+            <button id="tab-demo" class="tab-btn tab-demo-pill" type="button">⚡ DEMO</button>
           </div>
 
           <h2 id="auth-title">BEGIN YOUR JOURNEY</h2>
           <p id="auth-subtitle">Create your explorer profile and start your journey.</p>
+
+          <div id="demo-info" class="demo-workspace-box" style="display:none;">
+            <div class="demo-badge-pill">⚡ Instant Bypass Active</div>
+            <h4>BharatQuest Demo Workspace</h4>
+            <p>Skip login and sign up to test the full 3D interactive historical quest immediately.</p>
+            <ul>
+              <li>🏛️ <strong>All 5 Eras Open:</strong> Harappa, Vedic, Maurya, Chola, &amp; Freedom</li>
+              <li>🏺 <strong>Fast Quest Loop:</strong> Collect artifacts and solve historical seals</li>
+              <li>🤖 <strong>Kalam AI:</strong> Instant historical tutoring &amp; hints</li>
+            </ul>
+          </div>
 
           <div id="register-fields">
             <label class="field">
@@ -91,33 +103,46 @@
             </div>
           </div>
 
-          <label class="field">
-            <span>Email Address</span>
-            <div class="input-wrap">
-              <span class="input-icon">✉️</span>
-              <input id="email" type="email" value="arjun@bharatquest.in" autocomplete="email" aria-label="Email address">
-            </div>
-          </label>
+          <div id="credential-fields">
+            <label class="field">
+              <span>Email Address</span>
+              <div class="input-wrap">
+                <span class="input-icon">✉️</span>
+                <input id="email" type="email" value="arjun@bharatquest.in" autocomplete="email" aria-label="Email address">
+              </div>
+            </label>
 
-          <label class="field">
-            <span>Password</span>
-            <div class="input-wrap">
-              <span class="input-icon">🔒</span>
-              <input id="password" type="password" placeholder="Minimum 6 characters">
-              <span class="input-state">◉</span>
-            </div>
-          </label>
+            <label class="field">
+              <span>Password</span>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input id="password" type="password" placeholder="Minimum 6 characters">
+                <span class="input-state">◉</span>
+              </div>
+            </label>
 
-          <label id="confirm-password-wrap" class="field">
-            <span>Confirm Password</span>
-            <div class="input-wrap">
-              <span class="input-icon">🔒</span>
-              <input id="confirm-password" type="password" placeholder="Re-enter your password">
-              <span class="input-state">◉</span>
-            </div>
-          </label>
+            <label id="confirm-password-wrap" class="field">
+              <span>Confirm Password</span>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input id="confirm-password" type="password" placeholder="Re-enter your password">
+                <span class="input-state">◉</span>
+              </div>
+            </label>
+          </div>
 
           <button id="submit-btn" class="submit-btn" type="button">CREATE ACCOUNT <span>→</span></button>
+
+          <div class="auth-divider" id="auth-divider">
+            <span>OR QUICK ACCESS</span>
+          </div>
+
+          <button id="bypass-demo-btn" class="demo-bypass-btn" type="button">
+            <span class="demo-btn-icon">⚡</span>
+            <span class="demo-btn-text">Enter Demo Workspace</span>
+            <span class="demo-btn-tag">Bypass Login</span>
+          </button>
+
           <div id="auth-status" class="auth-status" aria-live="polite"></div>
 
           <p class="login-link">Already have an account? <a id="toggle-auth-link" href="#">LOGIN</a></p>
@@ -133,31 +158,55 @@
     const authTitle = document.getElementById('auth-title');
     const authSubtitle = document.getElementById('auth-subtitle');
     const registerFields = document.getElementById('register-fields');
+    const credentialFields = document.getElementById('credential-fields');
+    const demoInfo = document.getElementById('demo-info');
     const confirmWrap = document.getElementById('confirm-password-wrap');
+    const authDivider = document.getElementById('auth-divider');
+    const bypassDemoBtn = document.getElementById('bypass-demo-btn');
     const submitBtn = document.getElementById('submit-btn');
     const toggleLink = document.getElementById('toggle-auth-link');
     const statusBox = document.getElementById('auth-status');
     const tabLogin = document.getElementById('tab-login');
     const tabRegister = document.getElementById('tab-register');
+    const tabDemo = document.getElementById('tab-demo');
 
     function setMode(mode) {
       state.mode = mode;
       const isRegister = mode === 'register';
+      const isLogin = mode === 'login';
+      const isDemo = mode === 'demo';
 
-      tabLogin.classList.toggle('active', !isRegister);
+      tabLogin.classList.toggle('active', isLogin);
       tabRegister.classList.toggle('active', isRegister);
+      tabDemo.classList.toggle('active', isDemo);
 
       registerFields.style.display = isRegister ? 'block' : 'none';
       confirmWrap.style.display = isRegister ? 'block' : 'none';
+      credentialFields.style.display = isDemo ? 'none' : 'block';
+      demoInfo.style.display = isDemo ? 'block' : 'none';
+      authDivider.style.display = isDemo ? 'none' : 'flex';
+      bypassDemoBtn.style.display = isDemo ? 'none' : 'flex';
 
-      authTitle.textContent = isRegister ? 'BEGIN YOUR JOURNEY' : 'WELCOME BACK';
-      authSubtitle.textContent = isRegister
-        ? 'Create your explorer profile and start your journey.'
-        : 'Log in to continue your adventure.';
+      if (isDemo) {
+        authTitle.textContent = 'DEMO WORKSPACE';
+        authSubtitle.textContent = 'Instant access — bypass authentication and explore freely.';
+        submitBtn.innerHTML = '🚀 LAUNCH DEMO WORKSPACE';
+        toggleLink.textContent = 'REGISTER';
+        toggleLink.parentElement.firstChild.textContent = 'Want to create a personal profile? ';
+      } else if (isRegister) {
+        authTitle.textContent = 'BEGIN YOUR JOURNEY';
+        authSubtitle.textContent = 'Create your explorer profile and start your journey.';
+        submitBtn.innerHTML = 'CREATE ACCOUNT <span>→</span>';
+        toggleLink.textContent = 'LOGIN';
+        toggleLink.parentElement.firstChild.textContent = 'Already have an account? ';
+      } else {
+        authTitle.textContent = 'WELCOME BACK';
+        authSubtitle.textContent = 'Log in to continue your adventure.';
+        submitBtn.innerHTML = 'LOGIN <span>→</span>';
+        toggleLink.textContent = 'REGISTER';
+        toggleLink.parentElement.firstChild.textContent = 'New to BharatQuest? ';
+      }
 
-      submitBtn.innerHTML = isRegister ? 'CREATE ACCOUNT <span>→</span>' : 'LOGIN <span>→</span>';
-      toggleLink.textContent = isRegister ? 'LOGIN' : 'REGISTER';
-      toggleLink.parentElement.firstChild.textContent = isRegister ? 'Already have an account? ' : 'New to BharatQuest? ';
       statusBox.textContent = '';
     }
 
@@ -176,21 +225,85 @@
       }
     }
 
-    function enterGame(message) {
+    function enterGame(message, opts = {}) {
       const authShell = document.querySelector('.auth-shell');
-      if (authShell) authShell.style.display = 'none';
 
-      if (!window.BQ || typeof window.BQ.startLevel !== 'function' || !window.BQ.renderer) {
-        setStatus('The game is still loading. Please try again in a moment.', true);
-        if (authShell) authShell.style.display = '';
-        return;
+      function tryStart() {
+        if (window.BQ && typeof window.BQ.startLevel === 'function' && window.BQ.renderer) {
+          if (authShell) authShell.style.display = 'none';
+          setStatus(message);
+          window.BQ.startLevel(1, opts);
+          return true;
+        }
+        return false;
       }
 
-      setStatus(message);
-      window.BQ.startLevel(1);
+      if (tryStart()) return;
+
+      setStatus('⏳ Initializing 3D engine... please wait a moment.');
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts++;
+        if (tryStart() || attempts > 30) {
+          clearInterval(timer);
+          if (attempts > 30 && (!window.BQ || !window.BQ.renderer)) {
+            setStatus('Could not start 3D engine yet. Please check WebGL or retry.', true);
+            if (authShell) authShell.style.display = '';
+          }
+        }
+      }, 150);
+    }
+
+    function enterMissionSelect(message) {
+      const authShell = document.querySelector('.auth-shell');
+
+      function tryOpen() {
+        if (window.BQ && typeof window.BQ.toChronoMap === 'function') {
+          if (authShell) authShell.style.display = 'none';
+          setStatus(message);
+          window.BQ.toChronoMap();
+          return true;
+        }
+        return false;
+      }
+
+      if (tryOpen()) return;
+
+      setStatus('⏳ Opening mission selection... please wait a moment.');
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts++;
+        if (tryOpen() || attempts > 30) {
+          clearInterval(timer);
+          if (attempts > 30 && (!window.BQ || !window.BQ.toChronoMap)) {
+            setStatus('Could not open mission screen yet. Please check WebGL or retry.', true);
+            if (authShell) authShell.style.display = '';
+          }
+        }
+      }, 150);
+    }
+
+    function launchDemoWorkspace() {
+      const demoAccount = {
+        name: 'Demo Explorer',
+        email: 'demo@bharatquest.in',
+        avatar: '🧑',
+        isDemo: true
+      };
+      try {
+        localStorage.setItem(ACCOUNT_KEY, JSON.stringify(demoAccount));
+      } catch (e) {
+        console.warn('LocalStorage unavailable for demo account', e);
+      }
+      enterMissionSelect('⚡ Demo Workspace active. Choose a mission to begin!');
     }
 
     function handleSubmit() {
+      if (state.mode === 'demo') {
+        launchDemoWorkspace();
+        return;
+      }
+
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
@@ -250,9 +363,16 @@
 
     tabLogin.addEventListener('click', () => setMode('login'));
     tabRegister.addEventListener('click', () => setMode('register'));
+    tabDemo.addEventListener('click', () => setMode('demo'));
+    bypassDemoBtn.addEventListener('click', launchDemoWorkspace);
+
     toggleLink.addEventListener('click', (event) => {
       event.preventDefault();
-      setMode(state.mode === 'register' ? 'login' : 'register');
+      if (state.mode === 'demo') {
+        setMode('register');
+      } else {
+        setMode(state.mode === 'register' ? 'login' : 'register');
+      }
     });
     submitBtn.addEventListener('click', handleSubmit);
 
@@ -326,6 +446,14 @@
       <div class="panel small">
         <div class="panel-head"><span>🎒 Inventory</span><button class="icon-btn" id="inv-close">✕</button></div>
         <div id="inv-body"></div>
+        <button class="btn primary" id="btn-journal">📓 Open Scholar's Journal</button>
+      </div>
+    </div>
+
+    <div id="journal-panel" class="modal hidden">
+      <div class="panel small">
+        <div class="panel-head"><span>📓 Scholar's Journal</span><button class="icon-btn" id="journal-close">✕</button></div>
+        <div id="journal-body"></div>
       </div>
     </div>
 
@@ -366,6 +494,12 @@
         <div class="big-seal">🔱🔱🔱🔱🔱</div>
         <p class="oath">“YOU HAVE BECOME A GUARDIAN OF TIME.”</p>
         <p id="victory-stats"></p>
+        <div class="final-controls">
+          <button class="btn" id="victory-evidence">🧾 Review Evidence</button>
+          <button class="btn" id="victory-codex">📚 Review Codex &amp; Timeline</button>
+          <button class="btn" id="victory-replay">↻ Replay Archive</button>
+          <button class="btn" id="victory-profile">🧠 Thinker Profile</button>
+        </div>
         <button class="btn primary big" id="victory-map">🗺️ Explore the Chrono Map</button>
       </div>
     </div>
@@ -395,6 +529,7 @@
         <button class="btn" id="btn-levels">🗺️ LEVEL SELECT</button>
         <button class="btn" id="btn-museum">🏺 HISTORY MUSEUM</button>
         <button class="btn" id="btn-achv">🏆 ACHIEVEMENTS</button>
+        <button class="btn" id="btn-codex">📚 CODEX &amp; TIMELINE</button>
         <button class="btn" id="btn-settings">⚙ SETTINGS</button>
         <button class="btn demo" id="btn-demo">🎬 DEMO MODE (quick Level 1)</button>
       </div>
@@ -405,8 +540,8 @@
 
   <div id="screen-levels" class="screen hidden">
     <div class="page">
-      <h2>🗺️ THE CHRONO MAP</h2>
-      <p class="tagline">Five portals. Five eras. Recover every Time Seal.</p>
+      <h2>🗺️ SELECT MISSION · THE CHRONO MAP</h2>
+      <p class="tagline">Five historical eras. Select any mission below to begin your quest.</p>
       <div id="level-cards"></div>
       <button class="btn ghost" data-back>← Main Menu</button>
     </div>
@@ -425,6 +560,18 @@
     <div class="page">
       <h2>🏆 ACHIEVEMENTS</h2>
       <div id="achv-list"></div>
+      <button class="btn ghost" data-back>← Main Menu</button>
+    </div>
+  </div>
+
+  <div id="screen-codex" class="screen hidden">
+    <div class="page wide">
+      <h2>📚 KNOWLEDGE CODEX</h2>
+      <p class="tagline">Evidence and decisions discovered on your journey.</p>
+      <div id="codex-list"></div>
+      <h2>🕰️ TIMELINE</h2>
+      <p class="tagline">A learning sequence, not a claim of exact dates.</p>
+      <div id="timeline-list"></div>
       <button class="btn ghost" data-back>← Main Menu</button>
     </div>
   </div>
